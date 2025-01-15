@@ -34,7 +34,7 @@ android {
 
 dependencies {
     // Importă Firebase BOM pentru a gestiona versiunile dependențelor Firebase
-    implementation platform('com.google.firebase:firebase-bom:33.7.0') //sau cea mai recenta versiune
+    implementation libs.firebase.bom //sau cea mai recenta versiune
 
     implementation 'com.google.android.gms:play-services-auth:21.0.0'
     implementation 'com.google.firebase:firebase-analytics'
@@ -43,6 +43,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage'
     implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.google.android.gms:play-services-maps:19.0.0' //sau cea mai recenta versiune
+    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
+
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
 
     // Adaugă dependențele pentru componentele AndroidX
     implementation 'androidx.appcompat:appcompat:1.7.0' //sau cea mai recenta versiune

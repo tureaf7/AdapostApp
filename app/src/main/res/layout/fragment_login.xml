@@ -62,14 +62,14 @@
                 android:layout_marginTop="30dp"
                 app:cornerRadius = "20dp"/>
 
-            <TextView
-                android:id="@+id/textViewRegister"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="Inregistrare" />
-
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/textViewRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Inregistrare" />
 </LinearLayout>
