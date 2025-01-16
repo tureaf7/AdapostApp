@@ -36,6 +36,12 @@ dependencies {
     // Importă Firebase BOM pentru a gestiona versiunile dependențelor Firebase
     implementation libs.firebase.bom //sau cea mai recenta versiune
 
+    implementation 'com.google.firebase:firebase-analytics:21.0.0'
+    implementation 'com.google.firebase:firebase-firestore:24.2.0'
+    implementation 'com.google.firebase:firebase-storage:20.1.0'
+    implementation 'com.google.firebase:firebase-messaging:23.1.0'
+
+
     implementation 'com.google.android.gms:play-services-auth:21.0.0'
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-firestore'
@@ -65,4 +71,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+
+    implementation 'com.google.firebase:firebase-auth:22.1.0'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.5") // Or the latest version
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
 }

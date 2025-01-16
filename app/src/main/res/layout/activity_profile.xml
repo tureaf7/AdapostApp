@@ -61,8 +61,8 @@
                 android:textSize="20sp" />
 
             <Button
-                android:id="@+id/logInbutton"
-                android:layout_width="171dp"
+                android:id="@+id/loginButton"
+                android:layout_width="172dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginBottom="16dp"
@@ -70,8 +70,8 @@
                 android:text="Login" />
 
             <Button
-                android:id="@+id/Registerbutton"
-                android:layout_width="171dp"
+                android:id="@+id/registerButton"
+                android:layout_width="172dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginBottom="16dp"
@@ -80,7 +80,7 @@
 
             <Button
                 android:id="@+id/signInButton"
-                android:layout_width="wrap_content"
+                android:layout_width="172dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
@@ -93,13 +93,14 @@
                 android:layout_marginTop="20dp"
                 android:gravity="center_vertical|start"
                 android:orientation="horizontal"
-                android:visibility="visible">
+                android:visibility="gone">
 
                 <ImageView
                     android:id="@+id/userPhotoImageView"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    android:src="@drawable/ic_launcher_foreground" />
+                    android:src="@drawable/ic_launcher_foreground"
+                    android:visibility="visible" />
 
                 <TextView
                     android:id="@+id/userNameTextView"
@@ -108,7 +109,8 @@
                     android:layout_marginLeft="10dp"
                     android:gravity="center_vertical"
                     android:text="Name"
-                    android:textSize="20sp" />
+                    android:textSize="20sp"
+                    android:visibility="visible" />
 
             </LinearLayout>
 
@@ -118,7 +120,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Log Out"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>
