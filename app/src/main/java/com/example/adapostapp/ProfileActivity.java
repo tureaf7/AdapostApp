@@ -15,6 +15,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+import androidx.core.app.ActivityCompat;
 
 // Android
 import android.os.Bundle;
@@ -33,10 +34,11 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
 import com.example.adapostapp.ui.login.AuthViewModel;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 
 public class ProfileActivity extends AppCompatActivity {
-
     private static final int RC_SIGN_IN = 9001;
     private FirebaseAuth mAuth;
     private Button registerButton, loginButton, signInButton, logOutButton;
@@ -60,6 +62,7 @@ public class ProfileActivity extends AppCompatActivity {
         textViewAuth = findViewById(R.id.textViewAuth);
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
+
         // Inițializează FirebaseAuth
         mAuth = FirebaseAuth.getInstance();
 
@@ -70,31 +73,26 @@ public class ProfileActivity extends AppCompatActivity {
 
         GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
-            signInButton.setOnClickListener(v -> {
+        signInButton.setOnClickListener(v -> {
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
             startActivityForResult(signInIntent, 9001);
         });
 
 
         // Configurează butoanele
-        registerButton.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, RegisterActivity.class);
-            startActivity(intent);
-        });
-        loginButton.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
-            startActivity(intent);
-        });
+        registerButton.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
+        loginButton.setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
         logOutButton.setOnClickListener(v -> signOut());
 
         // Observă utilizatorul logat
-        authViewModel.getCurrentUser().observe(this, user -> {
-            if (user != null) {
-                updateUI(user);
-            } else {
-                Toast.makeText(ProfileActivity.this, "Nu sunteți autentificat!", Toast.LENGTH_SHORT).show();
-            }
-        });
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            checkUserExists(currentUser);
+        } else {
+            profileHide();
+        }
+
+        authViewModel.getCurrentUser().observe(this, this::updateUI);
     }
 
     @Override
@@ -129,19 +127,79 @@ public class ProfileActivity extends AppCompatActivity {
     private void updateUI(FirebaseUser user) {
         if (user != null) {
             profileShow();
-            // Obține informații despre utilizator
-            String name = user.getDisplayName();   // Numele complet (din Google, dacă este disponibil)
             String email = user.getEmail();       // Email-ul utilizatorului
             String photoUrl = (user.getPhotoUrl() != null) ? user.getPhotoUrl().toString() : null;
-            Glide.with(this)
-                    .load(photoUrl)
-                    .placeholder(R.drawable.ic_launcher_foreground) // Imagine de rezervă (opțional)
-                    .into(userPhotoImageView);
-            userNameTextView.setText(name != null ? name : email);
+
+            // Verifică dacă utilizatorul este logat prin Google
+            boolean isGoogleUser = false;
+            for (UserInfo profile : user.getProviderData()) {
+                if (profile.getProviderId().equals("google.com")) {
+                    isGoogleUser = true;
+                    break;
+                }
+            }
+
+            if (isGoogleUser) {
+                // Dacă utilizatorul s-a autentificat cu Google
+                String name = user.getDisplayName();   // Numele complet (din Google, dacă este disponibil)
+                Glide.with(this)
+                        .load(photoUrl)
+                        .placeholder(R.drawable.ic_launcher_foreground) // Imagine de rezervă (opțional)
+                        .into(userPhotoImageView);
+                userNameTextView.setText(name != null ? name : email);
+            } else {
+                // Dacă utilizatorul s-a autentificat cu email și parolă, ia datele din Firestore
+                // Obține documentul corespunzător din colecția "users"
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                db.collection("users")
+                        .document(user.getUid())  // Folosește UID-ul utilizatorului pentru a găsi documentul corect
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                // Dacă documentul există în Firestore, extrage datele
+                                String name = documentSnapshot.getString("name");
+                                Glide.with(this)
+                                        .load(photoUrl)
+                                        .placeholder(R.drawable.ic_launcher_foreground)
+                                        .into(userPhotoImageView);
+                                userNameTextView.setText(name != null ? name : email);
+                            } else {
+                                // Dacă nu există datele utilizatorului în Firestore, afișează emailul
+                                userNameTextView.setText(email);
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            // Dacă există o eroare la accesarea Firestore, poți trata eroarea aici
+                            Toast.makeText(this, "Eroare la obținerea datelor utilizatorului din Firestore.", Toast.LENGTH_SHORT).show();
+                            userNameTextView.setText(email);  // În caz de eroare, arată emailul
+                        });
+            }
         } else {
             // Utilizatorul nu este autentificat, actualizează UI pentru ecranul de login
             Toast.makeText(this, "Autentificare nereușită sau utilizator deconectat.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void checkUserExists(FirebaseUser currentUser) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users")
+                .document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (!documentSnapshot.exists()) {
+                        // Dacă utilizatorul nu există în Firestore, deconectează-l
+                        signOut();
+                        Toast.makeText(ProfileActivity.this, "Contul a fost șters. Te rog să te autentifici din nou.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        updateUI(currentUser);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    // Dacă există o eroare la accesarea Firestore, tratează-o
+                    Toast.makeText(ProfileActivity.this, "Eroare la accesarea datelor utilizatorului.", Toast.LENGTH_SHORT).show();
+                    signOut();
+                });
     }
 
     private void signOut() {
