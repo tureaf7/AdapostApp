@@ -2,10 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="whiteDark">#F2F2F2F2</color>
+    <color name="whiteDark">#E9E9E9</color>
     <color name="colorPrimary">#6200EE</color>
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
     <color name="ripple_color">#80000000</color>
     <color name="hintColor">#40282828</color>
+    <color name="light_gray">#F5F5F5</color>
 </resources>

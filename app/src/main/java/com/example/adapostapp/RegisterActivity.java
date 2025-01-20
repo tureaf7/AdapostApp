@@ -17,6 +17,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.example.adapostapp.ui.login.AuthViewModel;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -38,7 +41,8 @@ public class RegisterActivity extends AppCompatActivity {
     private Button registerButton;
     private AuthViewModel authViewModel;
     private Uri imageUri;
-    private ImageView imageViewProfile;;
+    private ImageView imageViewProfile;
+    private String userid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +89,7 @@ public class RegisterActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
         // Observarea erorilor
@@ -120,9 +125,9 @@ public class RegisterActivity extends AppCompatActivity {
     // Funcție pentru încărcarea imaginii în Firebase Storage
     private void uploadImageToFirebase() {
         if (imageUri != null) {
+
             // Definirea unui nume unic pentru fișierul imaginii
             String fileName = "profile_images/" + System.currentTimeMillis() + ".jpg";
-
             // Referința către Firebase Storage
             FirebaseStorage storage = FirebaseStorage.getInstance();
             StorageReference storageRef = storage.getReference(fileName);
@@ -145,7 +150,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     // Actualizează profilul utilizatorului cu URL-ul imaginii
     private void updateUserProfileImage(String imageUrl) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser user = authViewModel.getCurrentUser().getValue();
         if (user != null) {
             // Actualizează documentul utilizatorului din Firestore
             FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -160,6 +165,9 @@ public class RegisterActivity extends AppCompatActivity {
                     .addOnFailureListener(e -> {
                         Toast.makeText(RegisterActivity.this, "Eroare la actualizarea imaginii.", Toast.LENGTH_SHORT).show();
                     });
+        }
+        else {
+            Toast.makeText(RegisterActivity.this, "Utilizatorul nu este autentificat. firestore nu s-a actualizat", Toast.LENGTH_SHORT).show();
         }
     }
 }

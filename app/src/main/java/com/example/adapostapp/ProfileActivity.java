@@ -3,6 +3,7 @@ package com.example.adapostapp;
 // Firebase
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.AuthCredential;
@@ -15,9 +16,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 
 // Android
+import android.annotation.SuppressLint;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.Layout;
 import android.view.View;
@@ -28,14 +33,19 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
+
 import com.example.adapostapp.ui.login.AuthViewModel;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 
 public class ProfileActivity extends AppCompatActivity {
@@ -46,7 +56,10 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView userNameTextView, textViewAuth;
     private LinearLayout layoutUserInfo;
     private AuthViewModel authViewModel;
+    private ImageButton buttonBackToMain;
+    private BottomNavigationView bottomNavigationView;
 
+    @SuppressLint("ResourceAsColor")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,8 +73,27 @@ public class ProfileActivity extends AppCompatActivity {
         userNameTextView = findViewById(R.id.userNameTextView);
         layoutUserInfo = findViewById(R.id.layoutUserInfo);
         textViewAuth = findViewById(R.id.textViewAuth);
+        buttonBackToMain = findViewById(R.id.buttonBackToMain);
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
+        bottomNavigationView.setSelectedItemId(R.id.navigation_profile);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.navigation_home) {
+                startActivity(new Intent(ProfileActivity.this, MainActivity.class));
+                return true;
+            } else if (itemId == R.id.navigation_favorites) {
+                startActivity(new Intent(ProfileActivity.this, FavoritesActivity.class));
+                return true;
+            } else if (itemId == R.id.navigation_messages) {
+                startActivity(new Intent(ProfileActivity.this, MessagesActivity.class));
+                return true;
+            } else if (itemId == R.id.navigation_profile) {
+                return true; // Rămâi în Profile
+            }
+            return false;
+        });
 
         // Inițializează FirebaseAuth
         mAuth = FirebaseAuth.getInstance();
@@ -80,9 +112,10 @@ public class ProfileActivity extends AppCompatActivity {
 
 
         // Configurează butoanele
+        buttonBackToMain.setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
         registerButton.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
         loginButton.setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
-        logOutButton.setOnClickListener(v -> signOut());
+        logOutButton.setOnClickListener(v -> showSignOutConfirmationDialog());
 
         // Observă utilizatorul logat
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -158,10 +191,16 @@ public class ProfileActivity extends AppCompatActivity {
                             if (documentSnapshot.exists()) {
                                 // Dacă documentul există în Firestore, extrage datele
                                 String name = documentSnapshot.getString("name");
+                                String urlImage = documentSnapshot.getString("profileImage");
+
+
+                                // Încarcă imaginea în ImageView folosind Glide
                                 Glide.with(this)
-                                        .load(photoUrl)
+                                        .load(urlImage)
+                                        .circleCrop()
                                         .placeholder(R.drawable.ic_launcher_foreground)
                                         .into(userPhotoImageView);
+
                                 userNameTextView.setText(name != null ? name : email);
                             } else {
                                 // Dacă nu există datele utilizatorului în Firestore, afișează emailul
@@ -202,13 +241,29 @@ public class ProfileActivity extends AppCompatActivity {
                 });
     }
 
+
+    private void showSignOutConfirmationDialog() {
+        // Creează un dialog de confirmare
+        new AlertDialog.Builder(this)
+                .setTitle("Deconectare")
+                .setMessage("Ești sigur că vrei să te deconectezi?")
+                .setPositiveButton("Da", (dialog, which) -> {
+                    // Apelează metoda signOut dacă utilizatorul confirmă
+                    signOut();
+                })
+                .setNegativeButton("Anulează", (dialog, which) -> {
+                    // Închide dialogul fără nicio acțiune
+                    dialog.dismiss();
+                })
+                .show();
+    }
     private void signOut() {
         mAuth.signOut();
         profileHide();
         Toast.makeText(this, "Utilizatorul a fost deconectat.", Toast.LENGTH_SHORT).show();
     }
 
-    private void profileShow(){
+    private void profileShow() {
         textViewAuth.setVisibility(View.GONE);
         registerButton.setVisibility(View.GONE);
         loginButton.setVisibility(View.GONE);
@@ -217,7 +272,7 @@ public class ProfileActivity extends AppCompatActivity {
         layoutUserInfo.setVisibility(View.VISIBLE);
     }
 
-    private void profileHide(){
+    private void profileHide() {
         textViewAuth.setVisibility(View.VISIBLE);
         registerButton.setVisibility(View.VISIBLE);
         loginButton.setVisibility(View.VISIBLE);

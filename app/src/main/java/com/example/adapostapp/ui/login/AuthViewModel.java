@@ -8,8 +8,10 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -115,4 +117,7 @@ public class AuthViewModel extends AndroidViewModel {
         this.errorMessage.postValue(errorMessage);
         Log.e("AuthViewModel", "Error: " + errorMessage);
     }
+
+
+
 }

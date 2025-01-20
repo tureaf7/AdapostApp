@@ -18,10 +18,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton profileButton;
     private FirebaseFirestore db;
     private BottomNavigationView bottomNavigationView;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +80,27 @@ public class MainActivity extends AppCompatActivity {
 
         // Preia toate animalele la lansare
         fetchAnimals("");
+
+
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users")
+                    .document(currentUser.getUid())  // Folosește UID-ul utilizatorului pentru a găsi documentul corect
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String urlImage = documentSnapshot.getString("profileImage");
+
+                            Glide.with(this)
+                                    .load(urlImage)
+                                    .circleCrop()
+                                    .placeholder(R.drawable.ic_launcher_foreground)
+                                    .into(profileButton);
+                        }
+                    });
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -102,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 TextView animalName = itemView.findViewById(R.id.textViewName);
                 TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
                 TextView animalAge = itemView.findViewById(R.id.textViewAge);
+                ImageButton imageButtonFavorite = itemView.findViewById(R.id.imageButtonFavorite);
 
                 animalName.setText(animal.getName());
                 animalBreed.setText(animal.getBreed());
@@ -111,6 +137,10 @@ public class MainActivity extends AppCompatActivity {
                 if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
                     Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
                 }
+
+                imageButtonFavorite.setOnClickListener(v -> {
+                    addToFavorite();
+                });
 
                 itemView.setOnClickListener(v -> {
                     Toast.makeText(MainActivity.this, "Nume animal: " + animal.getName(), Toast.LENGTH_SHORT).show();
@@ -122,6 +152,10 @@ public class MainActivity extends AppCompatActivity {
             Log.w("Firebase", "Error getting documents.", e);
             Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void addToFavorite(){
+        Toast.makeText(MainActivity.this, "Adăugat în favorite", Toast.LENGTH_SHORT).show();
     }
 
 }

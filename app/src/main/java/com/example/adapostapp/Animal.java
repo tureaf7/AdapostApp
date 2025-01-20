@@ -3,6 +3,7 @@ package com.example.adapostapp;
 import java.util.stream.Stream;
 
 public class Animal {
+    private int Id;
     private String Name;
     private String Gen;
     private String Species;
@@ -16,7 +17,8 @@ public class Animal {
         // Constructor necesar pentru Firebase
     }
 
-    public Animal(String name, String gen, String species, String breed, int age, com.google.firebase.Timestamp arrivalDate, boolean adopted, String photo) {
+    public Animal(int Id, String name, String gen, String species, String breed, int age, com.google.firebase.Timestamp arrivalDate, boolean adopted, String photo) {
+        Id = Id;
         Name = name;
         Gen = gen;
         Species = species;
@@ -28,6 +30,9 @@ public class Animal {
     }
 
     // Getteri și setteri
+    public int getId() { return Id; }
+    public void setId(int id) { Id = id; }
+
     public String getName() { return Name; }
     public void setName(String name) { Name = name; }
 

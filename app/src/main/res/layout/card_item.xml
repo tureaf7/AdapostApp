@@ -1,5 +1,6 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:cardBackgroundColor="@color/white"
@@ -8,7 +9,6 @@
     app:strokeWidth="0dp">
 
     <LinearLayout
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -26,8 +26,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:contentDescription="Descriere imagine"
                 android:scaleType="centerCrop" />
+
+            <ImageButton
+                android:id="@+id/imageButtonFavorite"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/rounded_button"
+                android:contentDescription="Adauga la favorite"
+                app:srcCompat="@drawable/ic_favorite" />
+
         </androidx.cardview.widget.CardView>
 
         <LinearLayout

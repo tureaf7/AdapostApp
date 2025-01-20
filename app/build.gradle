@@ -76,4 +76,9 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.5") // Or the latest version
     implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
+
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.android.gms:play-services-auth'
+
 }
