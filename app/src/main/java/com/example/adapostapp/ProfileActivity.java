@@ -18,16 +18,13 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
 
 // Android
 import android.annotation.SuppressLint;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
-import android.text.Layout;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,7 +33,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
@@ -44,8 +40,10 @@ import android.content.Intent;
 import com.example.adapostapp.ui.login.AuthViewModel;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+
+import java.lang.reflect.Array;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ProfileActivity extends AppCompatActivity {
@@ -59,7 +57,7 @@ public class ProfileActivity extends AppCompatActivity {
     private ImageButton buttonBackToMain;
     private BottomNavigationView bottomNavigationView;
 
-    @SuppressLint("ResourceAsColor")
+    @SuppressLint({"ResourceAsColor", "MissingInflatedId"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,7 +65,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         registerButton = findViewById(R.id.registerButton);
         loginButton = findViewById(R.id.loginButton);
-        signInButton = findViewById(R.id.signInButton);
+        signInButton = findViewById(R.id.signInGoogleButton);
         logOutButton = findViewById(R.id.logOutButton);
         userPhotoImageView = findViewById(R.id.userPhotoImageView);
         userNameTextView = findViewById(R.id.userNameTextView);
@@ -149,8 +147,7 @@ public class ProfileActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(this, "Autentificare reușită!", Toast.LENGTH_SHORT).show();
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        updateUI(user);
+                        updateUI(mAuth.getCurrentUser());
                     } else {
                         Toast.makeText(this, "Eroare: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -212,12 +209,43 @@ public class ProfileActivity extends AppCompatActivity {
                             Toast.makeText(this, "Eroare la obținerea datelor utilizatorului din Firestore.", Toast.LENGTH_SHORT).show();
                             userNameTextView.setText(email);  // În caz de eroare, arată emailul
                         });
+
             }
+            saveUserDataToFirestore(user);
         } else {
             // Utilizatorul nu este autentificat, actualizează UI pentru ecranul de login
             Toast.makeText(this, "Autentificare nereușită sau utilizator deconectat.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void saveUserDataToFirestore(FirebaseUser user) {
+        // Verifică dacă există date în Firestore pentru utilizatorul curent
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String uid = user.getUid();
+        if(user != null){
+            // Caută utilizatorul în Firestore
+            db.collection("users").document(uid)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (!documentSnapshot.exists()) {
+                            // Dacă nu există, creează un document nou
+                            int[] favorite = new int[0];
+                            Map<String, Object> userData = new HashMap<>();
+                            userData.put("name", user.getDisplayName());
+                            userData.put("email", user.getEmail());
+                            userData.put("profileImage", user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null);
+                            userData.put("uid", uid);
+                            db.collection("users").document(uid).set(userData);
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        // Gestionează eventualele erori
+                        Log.e("ProfileActivity", "Error checking or updating user data in Firestore: ", e);
+                    });
+
+        }
+    }
+
 
     private void checkUserExists(FirebaseUser currentUser) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();

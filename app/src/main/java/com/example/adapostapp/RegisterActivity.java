@@ -42,12 +42,11 @@ public class RegisterActivity extends AppCompatActivity {
     private AuthViewModel authViewModel;
     private Uri imageUri;
     private ImageView imageViewProfile;
-    private String userid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register); // Asigură-te că ai layout-ul
+        setContentView(R.layout.activity_register);
 
         // Inițializare referințe la elemente din layout
         nameEditText = findViewById(R.id.name);

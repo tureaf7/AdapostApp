@@ -9,4 +9,5 @@
     <color name="ripple_color">#80000000</color>
     <color name="hintColor">#40282828</color>
     <color name="light_gray">#F5F5F5</color>
+    <color name="light_gray1">#EFEFEF</color>
 </resources>

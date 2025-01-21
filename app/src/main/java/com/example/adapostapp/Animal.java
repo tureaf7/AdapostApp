@@ -12,6 +12,7 @@ public class Animal {
     private com.google.firebase.Timestamp ArrivalDate;
     private boolean Adopted;
     private String Photo;
+    private String DocId;
 
     public Animal() {
         // Constructor necesar pentru Firebase
@@ -30,6 +31,9 @@ public class Animal {
     }
 
     // Getteri și setteri
+    public String getDocId() { return DocId; }
+    public void setDocId(String docId) { DocId = docId; }
+
     public int getId() { return Id; }
     public void setId(int id) { Id = id; }
 

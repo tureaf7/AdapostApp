@@ -88,7 +88,7 @@ public class AuthViewModel extends AndroidViewModel {
         if (user != null) {
             String uid = user.getUid();
             String displayName = name != null ? name : user.getDisplayName();
-
+            int[] favorite = new int[0];
             // Datele utilizatorului
             Map<String, Object> userData = new HashMap<>();
             userData.put("name", displayName);
@@ -104,12 +104,6 @@ public class AuthViewModel extends AndroidViewModel {
                     })
                     .addOnFailureListener(this::handleError);
         }
-    }
-
-    public void logout() {
-        mAuth.signOut();
-        currentUser.setValue(null);
-        successMessage.postValue("Logged out successfully.");
     }
 
     private void handleError(Exception e) {

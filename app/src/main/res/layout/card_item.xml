@@ -37,6 +37,7 @@
                 android:layout_marginEnd="10dp"
                 android:background="@drawable/rounded_button"
                 android:contentDescription="Adauga la favorite"
+                android:visibility="gone"
                 app:srcCompat="@drawable/ic_favorite" />
 
         </androidx.cardview.widget.CardView>
