@@ -118,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-
         String uid = currentUser.getUid();
 
         // Preia lista de favorite ale utilizatorului curent
@@ -191,7 +190,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String uid = currentUser.getUid(); // Obține UID-ul utilizatorului
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
 
         // Actualizează array-ul "favorites" al utilizatorului
@@ -249,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
         animalAge.setText(animal.getAge() + (animal.getAge() == 1 ? " an" : " ani"));
-        imageGen.setImageResource(animal.getGen().equals("Male") ? R.drawable.ic_male : R.drawable.ic_female);
+        imageGen.setImageResource(animal.getGen().equals("Mascul") ? R.drawable.ic_male : R.drawable.ic_female);
 
         if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
             Glide.with(this).load(animal.getPhoto()).into(animalPhoto);

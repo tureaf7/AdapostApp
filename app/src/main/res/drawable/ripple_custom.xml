@@ -2,7 +2,7 @@
     android:color="@color/ripple_color">
     <item android:id="@android:id/mask">
         <shape android:shape="oval">
-            <solid android:color="@android:color/white" /> <!-- Culoarea de bază, se poate schimba-->
+            <solid android:color="@color/whiteDark" /> <!-- Culoarea de bază, se poate schimba-->
         </shape>
     </item>
 </ripple>

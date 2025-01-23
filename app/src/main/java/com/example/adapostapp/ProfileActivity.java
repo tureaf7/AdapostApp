@@ -240,6 +240,7 @@ public class ProfileActivity extends AppCompatActivity {
                     })
                     .addOnFailureListener(e -> {
                         // Gestionează eventualele erori
+                        Toast.makeText(this, "Eroare la incarcarea datelor in firestore.", Toast.LENGTH_SHORT).show();
                         Log.e("ProfileActivity", "Error checking or updating user data in Firestore: ", e);
                     });
 
