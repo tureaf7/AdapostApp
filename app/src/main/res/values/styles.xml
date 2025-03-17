@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="profile_menu">
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">10dp</item>
+    </style>
+
+    <style name="DetailTag">
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#757575</item> <!-- Gri închis -->
+        <item name="android:background">@drawable/tag_background</item> <!-- Fundal gri rotunjit -->
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="DetailValue">
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#212121</item> <!-- Gri închis (aproape negru) -->
+        <item name="android:background">@drawable/tag_background</item> <!-- Fundal gri deschis -->
+        <item name="android:gravity">center</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="StatusTag">
+        <item name="android:layout_width">100dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#FFFFFF</item> <!-- Text alb -->
+        <item name="android:background">@drawable/status_tag_background</item> <!-- Fundal verde rotunjit -->
+        <item name="android:gravity">center</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="DetailBox">
+        <item name="android:layout_width">90dp</item>
+        <item name="android:layout_height">90dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:background">@drawable/detail_box</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="EditTextField">
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:backgroundTint">@color/black</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorHint">@color/hintColor</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
+
+</resources>

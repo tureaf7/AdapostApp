@@ -1,0 +1,258 @@
+package com.example.adapostapp;
+
+import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+
+import androidx.appcompat.widget.SwitchCompat;
+
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.UUID;
+
+public class AddAnimalActivity extends AppCompatActivity {
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private EditText nameEditText, breedEditText, ageEditText, colorEditText, descriptionEditText;
+    private ProgressBar progressBar;
+    private RadioGroup speciesGroup, genGroup;
+    private RadioButton dogButton, catButton, maleButton, femaleButton;
+    private FirebaseFirestore db;
+    private TextView dateTextView;
+    private Button submitButton, buttonPickDate, buttonSelectImage;
+    private ImageView imageAnimal;
+    private ImageButton buttonBackToMain;
+    private SwitchCompat sterilizedSwitch, vaccinatedSwitch;
+    private Uri imageUri;
+    private StorageReference storageReference;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_add_animal);
+
+        db = FirebaseFirestore.getInstance();
+        storageReference = FirebaseStorage.getInstance().getReference("animal_images");
+
+        nameEditText = findViewById(R.id.nameEditText);
+        breedEditText = findViewById(R.id.emailEditText);
+        ageEditText = findViewById(R.id.ageEditText);
+        colorEditText = findViewById(R.id.colorEditText);
+        descriptionEditText = findViewById(R.id.descriptionEditText);
+        progressBar = findViewById(R.id.progressBar);
+        buttonPickDate = findViewById(R.id.buttonPickDate);
+        buttonSelectImage = findViewById(R.id.buttonSelectImage);
+        imageAnimal = findViewById(R.id.imageProfile);
+        buttonBackToMain = findViewById(R.id.buttonBackToMain);
+        dateTextView = findViewById(R.id.dateTextView);
+        speciesGroup = findViewById(R.id.speciesGroup);
+        genGroup = findViewById(R.id.genGroup);
+        sterilizedSwitch = findViewById(R.id.sterilizedSwitch);
+        vaccinatedSwitch = findViewById(R.id.vaccinatedSwitch);
+        submitButton = findViewById(R.id.submitButton);
+
+        catButton = findViewById(R.id.radioButtonPisica);
+        dogButton = findViewById(R.id.radioButtonCaine);
+        maleButton = findViewById(R.id.radioButtonMale);
+        femaleButton = findViewById(R.id.radioButtonFemale);
+
+        progressBar.setVisibility(View.GONE);
+        submitButton.setEnabled(true);
+
+        buttonSelectImage.setOnClickListener(v -> openImageChooser());
+        imageAnimal.setOnClickListener(v -> openImageChooser());
+        buttonPickDate.setOnClickListener(v -> showDatePicker());
+        buttonBackToMain.setOnClickListener(v -> onBackPressed());
+
+        submitButton.setOnClickListener(v -> {
+            if (validateFields()) {
+                saveAnimalData();
+            }
+        });
+    }
+
+    private void showDatePicker() {
+        Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH);
+        int day = c.get(Calendar.DAY_OF_MONTH);
+
+        new DatePickerDialog(this, (view, year1, monthOfYear, dayOfMonth) -> {
+            Calendar selectedDate = Calendar.getInstance();
+            selectedDate.set(year1, monthOfYear, dayOfMonth);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault());
+            dateTextView.setText(dateFormat.format(selectedDate.getTime()));
+        }, year, month, day).show();
+    }
+
+    private void openImageChooser() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Selectați imaginea"), PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            imageUri = data.getData();
+            imageAnimal.setImageURI(imageUri);
+        }
+    }
+
+    private boolean validateFields() {
+        if (TextUtils.isEmpty(nameEditText.getText().toString())) {
+            nameEditText.setError("Introduceți numele animalului");
+            return false;
+        }
+        if (TextUtils.isEmpty(breedEditText.getText().toString())) {
+            breedEditText.setError("Introduceți rasa animalului");
+            return false;
+        }
+        if (TextUtils.isEmpty(ageEditText.getText().toString())) {
+            ageEditText.setError("Introduceți vârsta animalului");
+            return false;
+        }
+        if (TextUtils.isEmpty(dateTextView.getText().toString())) {
+            dateTextView.setError("Introduceți data de sosire");
+            return false;
+        }
+        return true;
+    }
+
+    private void saveAnimalData() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(this, "Autentificați-vă pentru a adăuga un animal!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+        submitButton.setEnabled(false);
+
+        if (imageUri != null) {
+            uploadImageAndSaveAnimal();
+        } else {
+            saveAnimalToFirestore("");
+        }
+    }
+
+    private void uploadImageAndSaveAnimal() {
+        StorageReference fileRef = storageReference.child(UUID.randomUUID().toString() + ".jpg");
+        fileRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl()
+                        .addOnSuccessListener(uri -> {
+                            saveAnimalToFirestore(uri.toString());
+                        }))
+                .addOnFailureListener(e -> {
+                    progressBar.setVisibility(View.GONE);
+                    submitButton.setEnabled(true);
+                    Toast.makeText(this, "Eroare la încărcarea imaginii!", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private Timestamp parseDate(String date) {
+        try {
+            Date parsedDate = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).parse(date);
+            return new Timestamp(parsedDate);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
+    private void saveAnimalToFirestore(String imageUrl) {
+        String name = nameEditText.getText().toString();
+        String gen = getSelectedRadioText(genGroup);
+        String speciesSelected = getSelectedRadioText(speciesGroup);
+        boolean isSterilized = getSelectedSwitchText(sterilizedSwitch);
+        boolean isVaccinated = getSelectedSwitchText(vaccinatedSwitch);
+        String color = colorEditText.getText().toString();
+        String description = descriptionEditText.getText().toString();
+        String breed = breedEditText.getText().toString();
+        int age = Integer.parseInt(ageEditText.getText().toString());
+        Timestamp arrivalDate = parseDate(dateTextView.getText().toString());
+
+        if (arrivalDate == null) {
+            Toast.makeText(this, "Dată invalidă!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Creează un obiect Animal fără ID
+        Animal animal = new Animal(name, gen, speciesSelected, isSterilized, isVaccinated, color, description, breed, age, arrivalDate, false, imageUrl);
+
+        // Adaugă animalul în Firestore
+        db.collection("Animals").add(animal)
+                .addOnSuccessListener(documentReference -> {
+                    // Setează ID-ul documentului în obiectul Animal
+                    String documentId = documentReference.getId();
+                    animal.setId(documentId);  // Setează câmpul `id` cu ID-ul generat de Firestore
+
+                    // Actualizează documentul cu ID-ul în Firestore
+                    db.collection("Animals").document(documentId).set(animal)
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(this, "Animal adăugat cu succes!", Toast.LENGTH_SHORT).show();
+                                Log.d("Switch", "stare switch" + String.valueOf(isSterilized));
+                                progressBar.setVisibility(View.GONE);
+                                submitButton.setEnabled(true);
+                                clearFields();
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(this, "Eroare: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Eroare: " + e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
+    private void clearFields() {
+        nameEditText.setText("");
+        breedEditText.setText("");
+        ageEditText.setText("");
+        dateTextView.setText("");
+        colorEditText.setText("");
+        descriptionEditText.setText("");
+        dogButton.setChecked(false);
+        catButton.setChecked(false);
+        maleButton.setChecked(false);
+        femaleButton.setChecked(false);
+        sterilizedSwitch.setChecked(false);
+        vaccinatedSwitch.setChecked(false);
+        imageAnimal.setImageResource(R.drawable.ic_launcher_foreground); // Placeholder
+    }
+
+    private String getSelectedRadioText(RadioGroup radioGroup) {
+        int selectedId = radioGroup.getCheckedRadioButtonId();
+        if (selectedId == -1) return "";
+        View radioButton = radioGroup.findViewById(selectedId);
+        int index = radioGroup.indexOfChild(radioButton);
+        return ((TextView) radioGroup.getChildAt(index)).getText().toString();
+    }
+
+    private boolean getSelectedSwitchText(SwitchCompat switchCompat) {
+        return switchCompat.isChecked();
+    }
+}

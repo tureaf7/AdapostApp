@@ -15,8 +15,8 @@
         android:padding="15dp">
 
         <androidx.cardview.widget.CardView
-            android:layout_width="160dp"
-            android:layout_height="160dp"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
             android:layout_gravity="center"
             android:layout_marginBottom="15dp"
             app:cardCornerRadius="26dp">
@@ -35,9 +35,8 @@
                 android:layout_gravity="end"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
-                android:background="@drawable/rounded_button"
+                android:background="@drawable/background_favorite_button"
                 android:contentDescription="Adauga la favorite"
-                android:visibility="gone"
                 app:srcCompat="@drawable/ic_favorite" />
 
         </androidx.cardview.widget.CardView>
@@ -72,13 +71,15 @@
             <TextView
                 android:id="@+id/textViewBreed"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="20dp" />
+                android:layout_height="match_parent"
+                android:layout_marginRight="20dp"
+                android:layout_weight="1" />
 
             <TextView
                 android:id="@+id/textViewAge"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_weight="0" />
         </LinearLayout>
 
     </LinearLayout>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/color"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--Edittext for getting course Name-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/buttonBackToMain"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/ripple_custom"
+            android:maxWidth="64dp"
+            android:maxHeight="64dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_arrow_left"
+            tools:ignore="SpeakableTextPresentCheck" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="255dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Editare profil"
+            android:textSize="20sp" />
+
+        <Space
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <ImageView
+                    android:id="@+id/imageProfile"
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    android:clickable="true"
+                    android:contentDescription="Selecteaza imagine"
+                    android:focusable="true"
+                    android:src="@drawable/ic_launcher_foreground" />
+
+                <ImageButton
+                    android:id="@+id/editImageButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="bottom|end"
+                    android:background="@drawable/ripple_custom"
+                    app:srcCompat="@drawable/ic_edit" />
+            </FrameLayout>
+
+            <EditText
+                android:id="@+id/nameEditText"
+                style="@style/EditTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nume"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <EditText
+                android:id="@+id/emailEditText"
+                style="@style/EditTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Email"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/submitButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Salvare"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

@@ -1,0 +1,31 @@
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    app:cardBackgroundColor="@color/light_gray"
+    app:layout_anchorGravity="center"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/background_back_button"
+            app:srcCompat="@drawable/ic_logout" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Vezi toate" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

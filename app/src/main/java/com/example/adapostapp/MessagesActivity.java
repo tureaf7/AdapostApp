@@ -56,7 +56,6 @@ public class MessagesActivity extends AppCompatActivity {
         });
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        messageInputLayout = findViewById(R.id.messageInputLayout);
         buttonBackToMain = findViewById(R.id.buttonBackToMain);
 
         buttonBackToMain.setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
@@ -71,6 +70,9 @@ public class MessagesActivity extends AppCompatActivity {
                 startActivity(new Intent(MessagesActivity.this, FavoritesActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_messages) {
+                return true;
+            } else if (itemId == R.id.navigation_animals) {
+                startActivity(new Intent(MessagesActivity.this, ListAnimalActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_profile) {
                 startActivity(new Intent(MessagesActivity.this, ProfileActivity.class));

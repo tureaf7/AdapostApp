@@ -1,6 +1,6 @@
 package com.example.adapostapp;
 
-import java.util.stream.Stream;
+import com.google.firebase.Timestamp;
 
 public class Animal {
     private String Id;
@@ -9,31 +9,34 @@ public class Animal {
     private String Species;
     private String Breed;
     private int Age;
-    private com.google.firebase.Timestamp ArrivalDate;
+    private Timestamp ArrivalDate;
     private boolean Adopted;
     private String Photo;
-    private String DocId;
+    private String Description;
+    private String Color;
+    private boolean isSterilized;
+    private boolean isVaccinated;
 
     public Animal() {
         // Constructor necesar pentru Firebase
     }
 
-    public Animal(String Id, String name, String gen, String species, String breed, int age, com.google.firebase.Timestamp arrivalDate, boolean adopted, String photo) {
-        Id = Id;
-        Name = name;
-        Gen = gen;
-        Species = species;
-        Breed = breed;
-        Age = age;
-        ArrivalDate = arrivalDate;
-        Adopted = adopted;
-        Photo = photo;
+    public Animal(String name, String gen, String speciesSelected, boolean sterilized, boolean vaccinated, String color, String description, String breed, int age, Timestamp arrivalDate, boolean adopted, String imageUrl) {
+        this.Name = name;
+        this.Gen = gen;
+        this.Species = speciesSelected;
+        this.isSterilized = sterilized;
+        this.isVaccinated = vaccinated;
+        this.Color = color;
+        this.Description = description;
+        this.Breed = breed;
+        this.Age = age;
+        this.ArrivalDate = arrivalDate;
+        this.Adopted = adopted;
+        this.Photo = imageUrl;
     }
 
     // Getteri și setteri
-    public String getDocId() { return DocId; }
-    public void setDocId(String docId) { DocId = docId; }
-
     public String getId() { return Id; }
     public void setId(String id) { Id = id; }
 
@@ -52,12 +55,24 @@ public class Animal {
     public int getAge() { return Age; }
     public void setAge(int age) { Age = age; }
 
-    public com.google.firebase.Timestamp getArrivalDate() { return ArrivalDate; }
-    public void setArrivalDate(com.google.firebase.Timestamp arrivalDate) { ArrivalDate = arrivalDate; }
+    public Timestamp getArrivalDate() { return ArrivalDate; }
+    public void setArrivalDate(Timestamp arrivalDate) { ArrivalDate = arrivalDate; }
 
     public boolean isAdopted() { return Adopted; }
     public void setAdopted(boolean adopted) { Adopted = adopted; }
 
     public String getPhoto() { return Photo; }
     public void setPhoto(String photo) { Photo = photo; }
+
+    public String getDescription() { return Description; }
+    public void setDescription(String description) { Description = description; }
+
+    public String getColor() { return Color; }
+    public void setColor(String color) { Color = color; }
+
+    public boolean isSterilized() { return isSterilized; }
+    public void setSterilized(boolean sterilized) { isSterilized = sterilized; }
+
+    public boolean isVaccinated() { return isVaccinated; }
+    public void setVaccinated(boolean vaccinated) { isVaccinated = vaccinated; }
 }

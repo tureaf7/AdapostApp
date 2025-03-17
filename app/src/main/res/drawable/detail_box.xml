@@ -1,0 +1,8 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="#F5F5F5"/> <!-- Gri deschis -->
+    <corners android:radius="16dp"/> <!-- Colțuri rotunjite -->
+    <padding android:left="12dp" android:top="8dp"
+        android:right="12dp" android:bottom="8dp"/>
+</shape>

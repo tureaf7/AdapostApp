@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/color"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--Edittext for getting course Name-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/buttonBackToMain"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/ripple_custom"
+            android:maxWidth="64dp"
+            android:maxHeight="64dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_arrow_left"
+            tools:ignore="SpeakableTextPresentCheck" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="255dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Editare animal"
+            android:textSize="20sp" />
+
+        <Space
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/nameEditText"
+                style="@style/EditTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nume"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <LinearLayout
+                android:id="@+id/linearLayout1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/GenText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Gen"
+                    android:textSize="18sp"
+                    tools:ignore="TextSizeCheck" />
+
+                <RadioGroup
+                    android:id="@+id/genGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radioButtonMale"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/black"
+                        android:text="Mascul"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        tools:ignore="HardcodedText" />
+
+                    <RadioButton
+                        android:id="@+id/radioButtonFemale"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/black"
+                        android:text="Femela"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        tools:ignore="HardcodedText" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/SpeciesText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Specie"
+                    android:textSize="18sp"
+                    tools:ignore="TextSizeCheck" />
+
+                <RadioGroup
+                    android:id="@+id/speciesGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radioButtonCaine"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/black"
+                        android:text="Câine"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        tools:ignore="HardcodedText" />
+
+                    <RadioButton
+                        android:id="@+id/radioButtonPisica"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/black"
+                        android:text="Pisică"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        tools:ignore="HardcodedText" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/sterilizedSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Sterilizat(ă)"
+                android:textColor="@color/black"
+                android:textSize="18sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/vaccinatedSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Vaccinat(ă)"
+                android:textColor="@color/black"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/emailEditText"
+                style="@style/EditTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Rasa"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <EditText
+                android:id="@+id/ageEditText"
+                style="@style/EditTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Varsta"
+                android:importantForAutofill="no"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/colorEditText"
+                style="@style/EditTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Culoare"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <EditText
+                android:id="@+id/descriptionEditText"
+                style="@style/EditTextField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Descriere"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/dateTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/black"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/black"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/buttonPickDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:text="Data primirii" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imageProfile"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_marginTop="16dp"
+                android:clickable="true"
+                android:contentDescription="Selecteaza imagine"
+                android:focusable="true"
+                android:src="@drawable/ic_launcher_foreground" />
+
+            <Button
+                android:id="@+id/buttonSelectImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Selecteaza imagine" />
+
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal" />
+
+            <Button
+                android:id="@+id/submitButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Adauga"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

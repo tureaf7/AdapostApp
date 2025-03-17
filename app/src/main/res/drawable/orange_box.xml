@@ -1,0 +1,6 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FF8C42"/> <!-- Portocaliu -->
+    <corners android:radius="24dp"/>
+    <padding android:left="24dp" android:top="12dp" android:right="24dp" android:bottom="12dp"/>
+</shape>

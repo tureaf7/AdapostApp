@@ -1,0 +1,100 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <!-- Textul sus -->
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/buttonBackToMain"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/ripple_custom"
+            android:maxWidth="64dp"
+            android:maxHeight="64dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_arrow_left"
+            tools:ignore="SpeakableTextPresentCheck" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="255dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Editare animale"
+            android:textSize="20sp" />
+
+        <Space
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/ScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:layout_above="@+id/bottomNavigationView"
+        android:layout_below="@+id/linearLayout3"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        tools:ignore="SpeakableTextPresentCheck">
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"></LinearLayout>
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/noneAnimalsTextView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="Lista de animale este goala"
+        android:textColor="#525252"
+        android:textSize="20sp"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigationView"
+        style="@style/Widget.MaterialComponents.BottomNavigationView.PrimarySurface"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="0dp"
+        android:background="@color/whiteDark"
+        app:itemIconTint="@color/cardview_dark_background"
+        app:itemTextColor="@color/cardview_dark_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:itemIconSize="28dp"
+        app:menu="@menu/bottom_navigation_menu" />
+
+</RelativeLayout>

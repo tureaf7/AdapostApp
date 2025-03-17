@@ -1,0 +1,12 @@
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#B6FF0000">
+
+    <!-- Fundal buton normal -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#77FFFFFF"/> <!-- Fundal inițial -->
+            <corners android:radius="30dp"/> <!-- Colțuri rotunjite -->
+        </shape>
+    </item>
+
+</ripple>

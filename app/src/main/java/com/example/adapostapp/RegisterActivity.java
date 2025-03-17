@@ -4,169 +4,211 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
+import android.app.ProgressDialog;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
-
-import com.bumptech.glide.Glide;
-import com.example.adapostapp.ui.login.AuthViewModel;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class RegisterActivity extends AppCompatActivity {
-
-    private static final int PICK_IMAGE_REQUEST = 1;
-    private EditText nameEditText, emailEditText, passwordEditText, confirmPasswordEditText;
+    private EditText nameET, emailET, passwordET, confirmPasswordET;
     private Button registerButton;
-    private AuthViewModel authViewModel;
+    private ImageView profileImageView;
     private Uri imageUri;
-    private ImageView imageViewProfile;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
+    private StorageReference storageRef;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Inițializare referințe la elemente din layout
-        nameEditText = findViewById(R.id.name);
-        emailEditText = findViewById(R.id.email);
-        passwordEditText = findViewById(R.id.password);
-        confirmPasswordEditText = findViewById(R.id.passwordConfirm);
+        nameET = findViewById(R.id.name);
+        emailET = findViewById(R.id.email);
+        passwordET = findViewById(R.id.password);
+        confirmPasswordET = findViewById(R.id.passwordConfirm);
         registerButton = findViewById(R.id.registerButton);
-        imageViewProfile = findViewById(R.id.imageViewProfile);
+        profileImageView = findViewById(R.id.imageViewProfile);
 
-        // Initialize AuthViewModel
-        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        storageRef = FirebaseStorage.getInstance().getReference("profile_pictures");
 
-        imageViewProfile.setOnClickListener(v -> openImageChooser());
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Se înregistrează...");
 
-        registerButton.setOnClickListener(v -> {
-            String name = nameEditText.getText().toString();
-            String email = emailEditText.getText().toString();
-            String password = passwordEditText.getText().toString();
-            String confirmPassword = confirmPasswordEditText.getText().toString();
+        // Alegere imagine din galerie
+        profileImageView.setOnClickListener(view -> selectImage());
 
-            // Validări (esential!)
-            if (name.isEmpty() || email.isEmpty() || password.isEmpty() || password.isEmpty()) {
-                if (!password.equals(confirmPassword)){
-                    Toast.makeText(RegisterActivity.this, "Parolele nu se potrivesc", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Toast.makeText(RegisterActivity.this, "Vă rugăm să completați toate câmpurile corect.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            authViewModel.register(email, password, name);
-        });
-
-
-        // Observarea LiveData pentru rezultatele înregistrării
-        authViewModel.getCurrentUser().observe(this, user -> {
-            if (user != null) {
-                Toast.makeText(RegisterActivity.this, "Înregistrare reușită!", Toast.LENGTH_SHORT).show();
-
-                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
-        // Observarea erorilor
-        authViewModel.getErrorMessage().observe(this, errorMessage -> {
-            if (errorMessage != null) {
-                Toast.makeText(RegisterActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
-            }
-        });
-
+        registerButton.setOnClickListener(view -> registerUser());
     }
 
-    private void openImageChooser() {
+    private void selectImage() {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Selectați imaginea"), PICK_IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, "Selectează o imagine"), 1);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+        if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData();
-
-            // Afișează imaginea aleasă în interfața utilizatorului
-            Glide.with(this).load(imageUri).into(imageViewProfile);
-
-            // Poți adăuga acum logica pentru a salva imaginea în Firebase Storage
-            uploadImageToFirebase();
+            profileImageView.setImageURI(imageUri);
         }
     }
 
-    // Funcție pentru încărcarea imaginii în Firebase Storage
-    private void uploadImageToFirebase() {
-        if (imageUri != null) {
+    private void registerUser() {
+        String name = nameET.getText().toString().trim();
+        String email = emailET.getText().toString().trim();
+        String password = passwordET.getText().toString().trim();
+        String confirmPassword = confirmPasswordET.getText().toString().trim();
 
-            // Definirea unui nume unic pentru fișierul imaginii
-            String fileName = "profile_images/" + System.currentTimeMillis() + ".jpg";
-            // Referința către Firebase Storage
-            FirebaseStorage storage = FirebaseStorage.getInstance();
-            StorageReference storageRef = storage.getReference(fileName);
+        if (password.length() < 6){
+            passwordET.setError("Parola trebuie să aibă cel puțin 6 caractere!");
+            passwordET.requestFocus();
+            return;
+        }
+        if (!password.equals(confirmPassword)) {
+            confirmPasswordET.setError("Parolele nu se potrivesc!");
+            confirmPasswordET.requestFocus();
+            return;
+        }
+        if (name.isEmpty()){
+            nameET.setError("Acest câmp este obligatoriu!");
+            nameET.requestFocus();
+            return;
+        }
+        if (email.isEmpty()){
+            emailET.setError("Acest câmp este obligatoriu!");
+            emailET.requestFocus();
+            return;
+        }
 
-            // Încărcarea imaginii
-            storageRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot -> {
-                        // Obține URL-ul imaginii încărcate
-                        storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            String imageUrl = uri.toString();
-                            // Poți folosi imageUrl pentru a actualiza informațiile utilizatorului în Firestore
-                            updateUserProfileImage(imageUrl);
-                        });
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(RegisterActivity.this, "Eroare la încărcarea imaginii.", Toast.LENGTH_SHORT).show();
+        progressDialog.show();
+        mAuth.createUserWithEmailAndPassword(email, password) // Creaza utilizatorul
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser(); // Obținem utilizatorul creat
+                        if (user != null) {
+                            uploadImageAndSaveData(user, name, email); // Salvează datele și imaginea
+                            sendEmailVerification(user); // Trimite email-ul de confirmare
+                        }
+                    } else {
+                        progressDialog.dismiss();
+                        try{
+                            throw Objects.requireNonNull(task.getException());
+                        }catch (FirebaseAuthUserCollisionException e){
+                            emailET.setError("Email deja înregistrat");
+                            emailET.requestFocus();
+                        }
+                        catch (FirebaseAuthInvalidCredentialsException e){
+                            emailET.setError("Email invalid");
+                            emailET.requestFocus();
+                        }
+                        catch (Exception e)
+                        {
+                            Toast.makeText(RegisterActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                        Toast.makeText(getApplicationContext(), "Autentificare eșuată!",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void sendEmailVerification(FirebaseUser user) {
+        // Trimite email-ul de confirmare
+        user.sendEmailVerification()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(RegisterActivity.this,
+                                "Te rugăm să îți verifici email-ul pentru a confirma contul!",
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(RegisterActivity.this,
+                                "Eroare la trimiterea email-ului de confirmare.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    private void uploadImageAndSaveData(FirebaseUser user, String name, String email) {
+        StorageReference fileRef = storageRef.child(user.getUid() + ".jpg");
+
+        fileRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    saveUserData(user, name, email, uri.toString()); // Salvează datele doar dacă imaginea a fost încărcată cu succes
+                }))
+                .addOnFailureListener(e -> {
+                    // Dacă apare o eroare la încărcarea imaginii, ștergem utilizatorul creat din Authentication
+                    user.delete().addOnCompleteListener(task -> {
+                        progressDialog.dismiss();
+                        Log.e("FirebaseStorage", "Image upload failed", e);
+                        Toast.makeText(RegisterActivity.this,
+                                "Eroare la încărcarea imaginii! Înregistrarea a fost anulată.",
+                                Toast.LENGTH_LONG).show();
                     });
-        }
+                });
     }
 
-    // Actualizează profilul utilizatorului cu URL-ul imaginii
-    private void updateUserProfileImage(String imageUrl) {
-        FirebaseUser user = authViewModel.getCurrentUser().getValue();
-        if (user != null) {
-            // Actualizează documentul utilizatorului din Firestore
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            Map<String, Object> userData = new HashMap<>();
-            userData.put("profileImage", imageUrl);
+    private void saveUserData(FirebaseUser user, String name, String email, String imageUrl) {
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("name", name);
+        userData.put("email", email);
+        userData.put("profileImageUrl", imageUrl);
+        userData.put("role", "user"); // Setăm rolul implicit ca "user"
 
-            db.collection("users").document(user.getUid())
-                    .update(userData)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(RegisterActivity.this, "Imaginea a fost actualizată.", Toast.LENGTH_SHORT).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(RegisterActivity.this, "Eroare la actualizarea imaginii.", Toast.LENGTH_SHORT).show();
-                    });
-        }
-        else {
-            Toast.makeText(RegisterActivity.this, "Utilizatorul nu este autentificat. firestore nu s-a actualizat", Toast.LENGTH_SHORT).show();
-        }
+        db.collection("users").document(user.getUid())
+                .set(userData)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        //Dacă salvarea reușește, actualizăm profilul în Firebase Auth
+                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                .setDisplayName(name)
+                                .setPhotoUri(Uri.parse(imageUrl))
+                                .build();
+                        user.updateProfile(profileUpdates);
+
+                        progressDialog.dismiss();
+                        Toast.makeText(RegisterActivity.this, "Înregistrare reușită!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(RegisterActivity.this, ProfileActivity.class));
+                        finish();
+                    } else {
+                        //Dacă salvarea datelor în Firestore eșuează, ștergem utilizatorul și poza
+                        deleteUserAndImage(user, imageUrl);
+                    }
+                });
     }
+
+    private void deleteUserAndImage(FirebaseUser user, String imageUrl) {
+        //Ștergem poza din Firebase Storage
+        StorageReference imageRef = FirebaseStorage.getInstance().getReferenceFromUrl(imageUrl);
+        imageRef.delete().addOnCompleteListener(task -> {
+            //După ce poza a fost ștearsă, ștergem utilizatorul din Firebase Authentication
+            user.delete().addOnCompleteListener(deleteTask -> {
+                progressDialog.dismiss();
+                Toast.makeText(RegisterActivity.this, "Eroare la salvarea datelor! Înregistrarea a fost anulată.",
+                        Toast.LENGTH_LONG).show();
+            });
+        });
+    }
+
 }
