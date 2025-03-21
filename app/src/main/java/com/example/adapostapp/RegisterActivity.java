@@ -11,6 +11,8 @@ import android.widget.Toast;
 import android.app.ProgressDialog;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.adapostapp.utils.UserUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
@@ -82,7 +84,7 @@ public class RegisterActivity extends AppCompatActivity {
         String password = passwordET.getText().toString().trim();
         String confirmPassword = confirmPasswordET.getText().toString().trim();
 
-        if (password.length() < 6){
+        if (password.length() < 6) {
             passwordET.setError("Parola trebuie să aibă cel puțin 6 caractere!");
             passwordET.requestFocus();
             return;
@@ -92,12 +94,12 @@ public class RegisterActivity extends AppCompatActivity {
             confirmPasswordET.requestFocus();
             return;
         }
-        if (name.isEmpty()){
+        if (name.isEmpty()) {
             nameET.setError("Acest câmp este obligatoriu!");
             nameET.requestFocus();
             return;
         }
-        if (email.isEmpty()){
+        if (email.isEmpty()) {
             emailET.setError("Acest câmp este obligatoriu!");
             emailET.requestFocus();
             return;
@@ -109,23 +111,20 @@ public class RegisterActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser(); // Obținem utilizatorul creat
                         if (user != null) {
+                            Log.d("Firebase", user.getUid());
                             uploadImageAndSaveData(user, name, email); // Salvează datele și imaginea
-                            sendEmailVerification(user); // Trimite email-ul de confirmare
                         }
                     } else {
                         progressDialog.dismiss();
-                        try{
+                        try {
                             throw Objects.requireNonNull(task.getException());
-                        }catch (FirebaseAuthUserCollisionException e){
+                        } catch (FirebaseAuthUserCollisionException e) {
                             emailET.setError("Email deja înregistrat");
                             emailET.requestFocus();
-                        }
-                        catch (FirebaseAuthInvalidCredentialsException e){
+                        } catch (FirebaseAuthInvalidCredentialsException e) {
                             emailET.setError("Email invalid");
                             emailET.requestFocus();
-                        }
-                        catch (Exception e)
-                        {
+                        } catch (Exception e) {
                             Toast.makeText(RegisterActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                         Toast.makeText(getApplicationContext(), "Autentificare eșuată!",
@@ -134,34 +133,21 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
-    private void sendEmailVerification(FirebaseUser user) {
-        // Trimite email-ul de confirmare
-        user.sendEmailVerification()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(RegisterActivity.this,
-                                "Te rugăm să îți verifici email-ul pentru a confirma contul!",
-                                Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(RegisterActivity.this,
-                                "Eroare la trimiterea email-ului de confirmare.",
-                                Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
 
     private void uploadImageAndSaveData(FirebaseUser user, String name, String email) {
-        StorageReference fileRef = storageRef.child(user.getUid() + ".jpg");
+        if (imageUri == null) {
+            // Dacă utilizatorul nu a ales o imagine, salvăm datele fără imagine
+            saveUserData(user, name, email, null);
+            return;
+        }
 
+        StorageReference fileRef = storageRef.child(user.getUid() + ".jpg");
         fileRef.putFile(imageUri)
-                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                    saveUserData(user, name, email, uri.toString()); // Salvează datele doar dacă imaginea a fost încărcată cu succes
-                }))
+                .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl()
+                        .addOnSuccessListener(uri -> saveUserData(user, name, email, uri.toString())))
                 .addOnFailureListener(e -> {
-                    // Dacă apare o eroare la încărcarea imaginii, ștergem utilizatorul creat din Authentication
                     user.delete().addOnCompleteListener(task -> {
                         progressDialog.dismiss();
-                        Log.e("FirebaseStorage", "Image upload failed", e);
                         Toast.makeText(RegisterActivity.this,
                                 "Eroare la încărcarea imaginii! Înregistrarea a fost anulată.",
                                 Toast.LENGTH_LONG).show();
@@ -169,34 +155,42 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
-    private void saveUserData(FirebaseUser user, String name, String email, String imageUrl) {
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("name", name);
-        userData.put("email", email);
-        userData.put("profileImageUrl", imageUrl);
-        userData.put("role", "user"); // Setăm rolul implicit ca "user"
+    private void saveUserData(FirebaseUser firebaseUser, String name, String email, String imageUrl) {
+        String finalImageUrl = (imageUrl != null) ? imageUrl : ""; // Dacă nu există imagine, folosim un string gol
 
-        db.collection("users").document(user.getUid())
-                .set(userData)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        //Dacă salvarea reușește, actualizăm profilul în Firebase Auth
-                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                .setDisplayName(name)
-                                .setPhotoUri(Uri.parse(imageUrl))
-                                .build();
-                        user.updateProfile(profileUpdates);
+        User user = new User(name, finalImageUrl, email, "user");
 
+        UserUtils.addUser(firebaseUser, user, new UserUtils.AddUserCallback() {
+            @Override
+            public void onAddSuccess() {
+                UserProfileChangeRequest.Builder profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setDisplayName(name);
+                if (!finalImageUrl.isEmpty()) {
+                    profileUpdates.setPhotoUri(Uri.parse(finalImageUrl));
+                }
+                firebaseUser.updateProfile(profileUpdates.build());
+
+                progressDialog.dismiss();
+                Toast.makeText(RegisterActivity.this, "Înregistrare reușită!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(RegisterActivity.this, ProfileActivity.class));
+                finish();
+            }
+
+            @Override
+            public void onAddFailure(Exception e) {
+                if (!finalImageUrl.isEmpty()) {
+                    deleteUserAndImage(firebaseUser, finalImageUrl);
+                } else {
+                    firebaseUser.delete().addOnCompleteListener(task -> {
                         progressDialog.dismiss();
-                        Toast.makeText(RegisterActivity.this, "Înregistrare reușită!", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(RegisterActivity.this, ProfileActivity.class));
-                        finish();
-                    } else {
-                        //Dacă salvarea datelor în Firestore eșuează, ștergem utilizatorul și poza
-                        deleteUserAndImage(user, imageUrl);
-                    }
-                });
+                        Toast.makeText(RegisterActivity.this, "Eroare la salvarea datelor! Înregistrarea a fost anulată.",
+                                Toast.LENGTH_LONG).show();
+                    });
+                }
+            }
+        });
     }
+
 
     private void deleteUserAndImage(FirebaseUser user, String imageUrl) {
         //Ștergem poza din Firebase Storage

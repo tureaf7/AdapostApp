@@ -5,12 +5,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -39,7 +39,7 @@ import java.util.UUID;
 
 public class AddAnimalActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
-    private EditText nameEditText, breedEditText, ageEditText, colorEditText, descriptionEditText;
+    private EditText nameEditText, breedEditText, colorEditText, descriptionEditText;
     private ProgressBar progressBar;
     private RadioGroup speciesGroup, genGroup;
     private RadioButton dogButton, catButton, maleButton, femaleButton;
@@ -51,6 +51,8 @@ public class AddAnimalActivity extends AppCompatActivity {
     private SwitchCompat sterilizedSwitch, vaccinatedSwitch;
     private Uri imageUri;
     private StorageReference storageReference;
+    private NumberPicker numberPickerYears, numberPickerMonths;
+    private int years, months;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,9 +62,8 @@ public class AddAnimalActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference("animal_images");
 
-        nameEditText = findViewById(R.id.nameEditText);
+        nameEditText = findViewById(R.id.phoneEditText);
         breedEditText = findViewById(R.id.emailEditText);
-        ageEditText = findViewById(R.id.ageEditText);
         colorEditText = findViewById(R.id.colorEditText);
         descriptionEditText = findViewById(R.id.descriptionEditText);
         progressBar = findViewById(R.id.progressBar);
@@ -76,6 +77,24 @@ public class AddAnimalActivity extends AppCompatActivity {
         sterilizedSwitch = findViewById(R.id.sterilizedSwitch);
         vaccinatedSwitch = findViewById(R.id.vaccinatedSwitch);
         submitButton = findViewById(R.id.submitButton);
+        numberPickerYears = findViewById(R.id.numberPickerYears);
+        numberPickerMonths = findViewById(R.id.numberPickerMonths);
+
+        numberPickerYears.setMinValue(0);
+        numberPickerYears.setMaxValue(30);
+        numberPickerYears.setWrapSelectorWheel(true);
+        numberPickerMonths.setMinValue(0);
+        numberPickerMonths.setMaxValue(11);
+        numberPickerMonths.setWrapSelectorWheel(true);
+
+        // Ascultă modificările și schimbă din nou culoarea textului}
+        numberPickerYears.setOnValueChangedListener((picker, oldVal, newVal) -> {
+            years = newVal;
+        });
+        numberPickerMonths.setOnValueChangedListener((picker, oldVal, newVal) -> {
+            months = newVal;
+        });
+
 
         catButton = findViewById(R.id.radioButtonPisica);
         dogButton = findViewById(R.id.radioButtonCaine);
@@ -136,10 +155,6 @@ public class AddAnimalActivity extends AppCompatActivity {
             breedEditText.setError("Introduceți rasa animalului");
             return false;
         }
-        if (TextUtils.isEmpty(ageEditText.getText().toString())) {
-            ageEditText.setError("Introduceți vârsta animalului");
-            return false;
-        }
         if (TextUtils.isEmpty(dateTextView.getText().toString())) {
             dateTextView.setError("Introduceți data de sosire");
             return false;
@@ -196,7 +211,8 @@ public class AddAnimalActivity extends AppCompatActivity {
         String color = colorEditText.getText().toString();
         String description = descriptionEditText.getText().toString();
         String breed = breedEditText.getText().toString();
-        int age = Integer.parseInt(ageEditText.getText().toString());
+//        int age = Integer.parseInt(ageEditText.getText().toString());
+
         Timestamp arrivalDate = parseDate(dateTextView.getText().toString());
 
         if (arrivalDate == null) {
@@ -205,7 +221,7 @@ public class AddAnimalActivity extends AppCompatActivity {
         }
 
         // Creează un obiect Animal fără ID
-        Animal animal = new Animal(name, gen, speciesSelected, isSterilized, isVaccinated, color, description, breed, age, arrivalDate, false, imageUrl);
+        Animal animal = new Animal(name, gen, speciesSelected, isSterilized, isVaccinated, color, description, breed, years, months, arrivalDate, false, imageUrl);
 
         // Adaugă animalul în Firestore
         db.collection("Animals").add(animal)
@@ -218,7 +234,6 @@ public class AddAnimalActivity extends AppCompatActivity {
                     db.collection("Animals").document(documentId).set(animal)
                             .addOnSuccessListener(aVoid -> {
                                 Toast.makeText(this, "Animal adăugat cu succes!", Toast.LENGTH_SHORT).show();
-                                Log.d("Switch", "stare switch" + String.valueOf(isSterilized));
                                 progressBar.setVisibility(View.GONE);
                                 submitButton.setEnabled(true);
                                 clearFields();
@@ -231,7 +246,8 @@ public class AddAnimalActivity extends AppCompatActivity {
     private void clearFields() {
         nameEditText.setText("");
         breedEditText.setText("");
-        ageEditText.setText("");
+        numberPickerMonths.setValue(0);
+        numberPickerYears.setValue(0);
         dateTextView.setText("");
         colorEditText.setText("");
         descriptionEditText.setText("");

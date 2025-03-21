@@ -8,7 +8,8 @@ public class Animal {
     private String Gen;
     private String Species;
     private String Breed;
-    private int Age;
+    private int Years;
+    private int Months;
     private Timestamp ArrivalDate;
     private boolean Adopted;
     private String Photo;
@@ -21,7 +22,7 @@ public class Animal {
         // Constructor necesar pentru Firebase
     }
 
-    public Animal(String name, String gen, String speciesSelected, boolean sterilized, boolean vaccinated, String color, String description, String breed, int age, Timestamp arrivalDate, boolean adopted, String imageUrl) {
+    public Animal(String name, String gen, String speciesSelected, boolean sterilized, boolean vaccinated, String color, String description, String breed, int years, int months , Timestamp arrivalDate, boolean adopted, String imageUrl) {
         this.Name = name;
         this.Gen = gen;
         this.Species = speciesSelected;
@@ -30,7 +31,8 @@ public class Animal {
         this.Color = color;
         this.Description = description;
         this.Breed = breed;
-        this.Age = age;
+        this.Years = years;
+        this.Months = months;
         this.ArrivalDate = arrivalDate;
         this.Adopted = adopted;
         this.Photo = imageUrl;
@@ -52,8 +54,11 @@ public class Animal {
     public String getBreed() { return Breed; }
     public void setBreed(String breed) { Breed = breed; }
 
-    public int getAge() { return Age; }
-    public void setAge(int age) { Age = age; }
+    public int getYears() { return Years; }
+    public void setYears(int years) { Years = years; }
+
+    public int getMonths() { return Months; }
+    public void setMonths(int months) { Months = months; }
 
     public Timestamp getArrivalDate() { return ArrivalDate; }
     public void setArrivalDate(Timestamp arrivalDate) { ArrivalDate = arrivalDate; }

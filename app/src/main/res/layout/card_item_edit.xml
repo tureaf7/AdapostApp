@@ -51,9 +51,8 @@
 
                 <ImageButton
                     android:id="@+id/imageEdit"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_gravity="end"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:backgroundTint="#00FFFFFF"
                     android:src="@drawable/ic_edit" />
             </LinearLayout>
@@ -79,13 +78,18 @@
                         android:id="@+id/textViewAge"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/textViewMonths"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
 
                 <ImageButton
                     android:id="@+id/imageButtonDelete"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_gravity="end"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="bottom"
                     android:backgroundTint="#00FFFFFF"
                     app:srcCompat="@drawable/ic_x" />
 

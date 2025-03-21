@@ -34,7 +34,7 @@ android {
 
 dependencies {
     // BOM pentru Firebase: gestionează automat versiunile compatibile
-    implementation platform('com.google.firebase:firebase-bom:32.2.0')
+    implementation platform('com.google.firebase:firebase-bom:33.10.0')
 
     // Firebase
     implementation 'com.google.firebase:firebase-analytics'
@@ -42,6 +42,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage'
     implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-messaging'
 
     // Google Play Services
     implementation 'com.google.android.gms:play-services-auth:21.0.0'

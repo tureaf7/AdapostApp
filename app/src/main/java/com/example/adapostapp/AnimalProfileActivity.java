@@ -1,9 +1,11 @@
 package com.example.adapostapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -13,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.example.adapostapp.utils.UserUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -25,15 +28,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+
 public class AnimalProfileActivity extends AppCompatActivity {
 
     private ImageView animalImage;
     private ImageButton backButton, favoriteButton;
-    private TextView animalName, arrivalDate, animalBreed, animalAge, animalColor, animalSex, animalDescription;
+    private TextView animalName, arrivalDate, animalBreed, animalYears, animalMonth, animalColor, animalSex, animalDescription;
     private FirebaseAuth auth;
     private LinearLayout animalStatusLayout;
     private FirebaseUser user;
     private FirebaseFirestore db;
+    private String animalId;
+    private Button adoptButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +47,8 @@ public class AnimalProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_animal_profile);
 
         // Inițializarea componentelor UI
-        animalAge = findViewById(R.id.animalAge);
+        animalYears = findViewById(R.id.animalYears);
+        animalMonth = findViewById(R.id.animalMonths);
         animalBreed = findViewById(R.id.animalBreed);
         animalColor = findViewById(R.id.animalColor);
         animalDescription = findViewById(R.id.animalDescription);
@@ -52,6 +59,7 @@ public class AnimalProfileActivity extends AppCompatActivity {
         backButton = findViewById(R.id.backButton);
         favoriteButton = findViewById(R.id.favoriteButton);
         animalStatusLayout = findViewById(R.id.animalStatusLayout);
+        adoptButton = findViewById(R.id.adoptButton);
 
         // Inițializare Firestore și FirebaseAuth
         auth = FirebaseAuth.getInstance();
@@ -59,7 +67,7 @@ public class AnimalProfileActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         // Recuperarea obiectului Animal din Intent
-        String animalId = getIntent().getStringExtra("animal");
+        animalId = getIntent().getStringExtra("animal");
 
         if (animalId != null) {
             // Popularea profilului animalului cu datele recuperate
@@ -72,19 +80,52 @@ public class AnimalProfileActivity extends AppCompatActivity {
 
         // Adaugă logica pentru butonul "Back"
         backButton.setOnClickListener(v -> onBackPressed());
+        adoptButton.setOnClickListener(v -> {
+            if (user == null) {
+                startActivity(new Intent(AnimalProfileActivity.this, ProfileActivity.class));
+            } else {
+                Intent intent = new Intent(AnimalProfileActivity.this, AdoptionActivity.class);
+                intent.putExtra("animal", animalId);
+                startActivity(intent);
+            }
+        });
 
         if (user == null) {
             favoriteButton.setVisibility(View.GONE);
         } else {
-            isFavorite(animalId);
-            favoriteButton.setOnClickListener(v -> {
-                if ("favorite".equals(favoriteButton.getTag())) {
-                    removeFromFavorite(animalId);
-                } else {
-                    addToFavorite(animalId);
-                }
-            });
+            checkUserRole(user);
         }
+    }
+
+    private void checkUserRole(FirebaseUser user) {
+        Log.d("AnimalProfileActivity", "checkUserRole - Verificare rol pentru utilizatorul " + user.getUid() + " " + user.getDisplayName());
+        UserUtils.checkUserRole(user, new UserUtils.UserRoleCallback() {
+            @Override
+            public void onRoleRetrieved(String role) {
+                if ("admin".equals(role)) {
+                    favoriteButton.setImageResource(R.drawable.ic_edit);
+                    favoriteButton.setOnClickListener(v -> {
+                        Intent intent = new Intent(AnimalProfileActivity.this, EditAnimalActivity.class);
+                        intent.putExtra("animal", animalId);
+                        startActivity(intent);
+                    });
+                } else {
+                    isFavorite(animalId);
+                    favoriteButton.setOnClickListener(v -> {
+                        if ("favorite".equals(favoriteButton.getTag())) {
+                            removeFromFavorite(animalId);
+                        } else {
+                            addToFavorite(animalId);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("Firestore", "Eroare la preluarea rolului", e);
+            }
+        });
     }
 
     private void isFavorite(String animalId) {
@@ -163,7 +204,8 @@ public class AnimalProfileActivity extends AppCompatActivity {
     private void populateAnimalProfile(Animal animal) {
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getAge() + (animal.getAge() == 1 ? " an" : " ani"));
+        animalYears.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
+        animalMonth.setText(animal.getMonths() + (animal.getMonths() == 1 ? " luna" : " luni"));
         animalColor.setText(animal.getColor());
         animalDescription.setText(animal.getDescription());
         animalSex.setText(animal.getGen());

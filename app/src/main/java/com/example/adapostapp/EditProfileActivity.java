@@ -17,18 +17,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 public class EditProfileActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
@@ -51,7 +47,7 @@ public class EditProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
-        nameEditText = findViewById(R.id.nameEditText);
+        nameEditText = findViewById(R.id.phoneEditText);
         emailEditText = findViewById(R.id.emailEditText);
         progressBar = findViewById(R.id.progressBar);
         submitButton = findViewById(R.id.submitButton);
@@ -111,36 +107,66 @@ public class EditProfileActivity extends AppCompatActivity {
         Map<String, Object> updateData = new HashMap<>();
         updateData.put("name", name);
         updateData.put("email", email);
-        updateData.put("profileImageUrl", user.getProfileImageUrl());
+
+        // Verificăm dacă există o imagine veche
+        boolean hasOldImage = user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty();
 
         if (imageUri != null) {
-            deleteOldImage(updateData);
+            // Dacă există o imagine veche, o ștergem înainte de a încărca una nouă
+            if (hasOldImage) {
+                deleteOldImage(updateData);
+            } else {
+                uploadImageAndUpdateUser(updateData); // Dacă nu există imagine veche, încărcăm direct noua imagine
+            }
         } else {
-            // Actualizăm direct în Firestore dacă imaginea nu s-a schimbat
+            // Dacă utilizatorul nu a selectat o imagine nouă, actualizăm doar numele și emailul
+            updateData.put("profileImageUrl", hasOldImage ? user.getProfileImageUrl() : ""); // Păstrăm vechiul URL sau îl golim
             db.collection("users").document(userFireStore.getUid())
                     .update(updateData)
                     .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "Datele animalului au fost actualizate!", Toast.LENGTH_SHORT).show();
-                        finish(); // Închide activitatea
+                        Toast.makeText(this, "Profilul a fost actualizat!", Toast.LENGTH_SHORT).show();
+                        finish();
                     })
                     .addOnFailureListener(e -> Toast.makeText(this, "Eroare la actualizare: " + e.getMessage(), Toast.LENGTH_LONG).show());
         }
     }
 
     private void deleteOldImage(Map<String, Object> updateData) {
-        String imageUrl = "profile_pictures/" + userFireStore.getUid() + ".jpg";
-        Log.d("Firebase", "Deleting image with URL: " + imageUrl);
-        StorageReference imageRef = storage.getReference().child(imageUrl);
+        String imageUrl = user.getProfileImageUrl();
+
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            // Dacă nu există o imagine veche, trecem direct la încărcarea noii imagini
+            uploadImageAndUpdateUser(updateData);
+            return;
+        }
+
+        Log.d("Firebase", "Ștergerea imaginii vechi: " + imageUrl);
+        StorageReference imageRef = FirebaseStorage.getInstance().getReferenceFromUrl(imageUrl);
 
         imageRef.delete()
                 .addOnSuccessListener(aVoid -> {
                     Log.d("Firebase", "Imaginea a fost ștearsă cu succes.");
-                    uploadImageAndUpdateAnimal(updateData);
+                    uploadImageAndUpdateUser(updateData);
                 })
-                .addOnFailureListener(e -> Log.w("Firebase", "Eroare la ștergerea imaginii.", e));
+                .addOnFailureListener(e -> {
+                    Log.w("Firebase", "Eroare la ștergerea imaginii.", e);
+                    uploadImageAndUpdateUser(updateData); // Continuăm cu actualizarea chiar dacă ștergerea imaginii eșuează
+                });
     }
 
-    private void uploadImageAndUpdateAnimal(Map<String, Object> updateData) {
+    private void uploadImageAndUpdateUser(Map<String, Object> updateData) {
+        if (imageUri == null) {
+            // Dacă nu există o nouă imagine, doar actualizăm datele
+            db.collection("users").document(userFireStore.getUid())
+                    .update(updateData)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Profilul a fost actualizat!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(this, "Eroare la actualizare: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            return;
+        }
+
         String fileName = userFireStore.getUid() + ".jpg";
         StorageReference storageRef = FirebaseStorage.getInstance().getReference("profile_pictures/" + fileName);
 
@@ -151,13 +177,13 @@ public class EditProfileActivity extends AppCompatActivity {
                             .update(updateData)
                             .addOnSuccessListener(aVoid -> {
                                 Toast.makeText(this, "Profilul a fost actualizat!", Toast.LENGTH_SHORT).show();
-                                finish(); // Închide activitatea
+                                finish();
                             })
                             .addOnFailureListener(e -> Toast.makeText(this, "Eroare la actualizare: " + e.getMessage(), Toast.LENGTH_LONG).show());
                 }))
                 .addOnFailureListener(e -> Toast.makeText(this, "Eroare la încărcarea imaginii: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-        progressBar.setVisibility(View.GONE);
     }
+
 
     private void openImageChooser() {
         Intent intent = new Intent();

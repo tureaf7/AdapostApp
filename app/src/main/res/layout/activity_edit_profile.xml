@@ -79,7 +79,7 @@
             </FrameLayout>
 
             <EditText
-                android:id="@+id/nameEditText"
+                android:id="@+id/phoneEditText"
                 style="@style/EditTextField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

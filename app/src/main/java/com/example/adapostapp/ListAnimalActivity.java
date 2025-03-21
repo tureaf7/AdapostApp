@@ -111,10 +111,18 @@ public class ListAnimalActivity extends AppCompatActivity {
                                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                                             Animal animal = document.toObject(Animal.class);
                                             if ("admin".equals(role)) {
-                                                addCardToUI(animal);
+                                                addCardToUIAdmin(animal);
                                             } else {
                                                 addAnimalCardToUI(animal);
                                             }
+                                        }
+                                        if ("admin".equals(role)){
+                                            View itemView = LayoutInflater.from(this).inflate(R.layout.add_animal, linearLayout, false);
+                                            itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
+                                                Intent intent = new Intent(this, AddAnimalActivity.class);
+                                                startActivity(intent);
+                                            });
+                                            linearLayout.addView(itemView);
                                         }
                                         progressBar.setVisibility(View.GONE);
                                     })
@@ -153,14 +161,20 @@ public class ListAnimalActivity extends AppCompatActivity {
         TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
         TextView animalAge = itemView.findViewById(R.id.textViewAge);
 
+
         // Populează datele animalului
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getAge() + (animal.getAge() == 1 ? " an" : " ani"));
+        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
 
         if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
             Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
         }
+
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int cardWidth = getResources().getDimensionPixelSize(R.dimen.card_width);
+        int columnCount = screenWidth / cardWidth;
+        gridLayout.setColumnCount(columnCount);
 
         // Setează lățimea cardului pentru a ocupa jumătate din ecran
         GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams();
@@ -180,7 +194,7 @@ public class ListAnimalActivity extends AppCompatActivity {
         gridLayout.addView(itemView);
     }
 
-    private void addCardToUI(Animal animal) {
+    private void addCardToUIAdmin(Animal animal) {
         View itemView = LayoutInflater.from(this).inflate(R.layout.card_item_edit, linearLayout, false);
 
         // Obține referințele la elementele din card
@@ -188,13 +202,17 @@ public class ListAnimalActivity extends AppCompatActivity {
         TextView animalName = itemView.findViewById(R.id.textViewName);
         TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
         TextView animalAge = itemView.findViewById(R.id.textViewAge);
+        TextView animalMonths = itemView.findViewById(R.id.textViewMonths);
         ImageButton imageEdit = itemView.findViewById(R.id.imageEdit);
         ImageButton imageButtonDelete = itemView.findViewById(R.id.imageButtonDelete);
 
         // Populează datele animalului
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getAge() + (animal.getAge() == 1 ? " an" : " ani"));
+        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
+        animalMonths.setText(animal.getMonths() + (animal.getMonths() == 1 ? " luna" : " luni"));
+        Log.d("Firebase", "Varsta animal: " + animal.getYears() +" ani " + animal.getMonths() + "luni");
+
 
         if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
             Glide.with(this).load(animal.getPhoto()).into(animalPhoto);

@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -38,7 +39,7 @@ import java.util.UUID;
 public class EditAnimalActivity extends AppCompatActivity {
 
     private static final int PICK_IMAGE_REQUEST = 1;
-    private EditText nameEditText, breedEditText, ageEditText, colorEditText, descriptionEditText;
+    private EditText nameEditText, breedEditText, colorEditText, descriptionEditText;
     private ProgressBar progressBar;
     private RadioGroup speciesGroup, genGroup;
     private RadioButton dogButton, catButton, maleButton, femaleButton;
@@ -51,6 +52,8 @@ public class EditAnimalActivity extends AppCompatActivity {
     private Uri imageUri;
     private StorageReference storageReference;
     private Animal animal;
+    private NumberPicker numberPickerYears, numberPickerMonths;
+    private int years, months;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,9 +65,10 @@ public class EditAnimalActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         storageReference = FirebaseStorage.getInstance().getReference("animal_images");
 
-        nameEditText = findViewById(R.id.nameEditText);
+        nameEditText = findViewById(R.id.phoneEditText);
         breedEditText = findViewById(R.id.emailEditText);
-        ageEditText = findViewById(R.id.ageEditText);
+        numberPickerMonths = findViewById(R.id.numberPickerMonths);
+        numberPickerYears = findViewById(R.id.numberPickerYears);
         colorEditText = findViewById(R.id.colorEditText);
         descriptionEditText = findViewById(R.id.descriptionEditText);
         progressBar = findViewById(R.id.progressBar);
@@ -92,12 +96,31 @@ public class EditAnimalActivity extends AppCompatActivity {
         buttonPickDate.setOnClickListener(v -> showDatePicker());
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
 
+        numberPickerYears.setMinValue(0);
+        numberPickerYears.setMaxValue(30);
+        numberPickerYears.setWrapSelectorWheel(true);
+        numberPickerMonths.setMinValue(0);
+        numberPickerMonths.setMaxValue(11);
+        numberPickerMonths.setWrapSelectorWheel(true);
+
+        // Ascultă modificările și schimbă din nou culoarea textului}
+        numberPickerYears.setOnValueChangedListener((picker, oldVal, newVal) -> {
+            years = newVal;
+            Log.d("Animal", "Ani: " + years + " Luni: " + months);
+        });
+        numberPickerMonths.setOnValueChangedListener((picker, oldVal, newVal) -> {
+            months = newVal;
+            Log.d("Animal", "Ani: " + years + " Luni: " + months);
+        });
+
         if (animalId != null) {
             populateFields(animalId);
         }
 
         submitButton.setOnClickListener(v -> {
             if (validateFields()) {
+                progressBar.setVisibility(View.VISIBLE);
+                submitButton.setEnabled(false);
                 updateAnimalData();
             }
         });
@@ -111,10 +134,14 @@ public class EditAnimalActivity extends AppCompatActivity {
                         animal = documentSnapshot.toObject(Animal.class);
                         if (animal != null) {
                             Log.d("Animal", "Animalul a fost găsit");
-                            Log.d("Animal", "Animalul este: " + animal.getName() + " " + animal.getId());
+                            Log.d("Animal", "Animalul este: " + animal.getName() + " " + animal.getId() +" " + animal.isVaccinated());
                             nameEditText.setText(animal.getName());
                             breedEditText.setText(animal.getBreed());
-                            ageEditText.setText(String.valueOf(animal.getAge()));
+                            years = animal.getYears();
+                            months = animal.getMonths();
+                            numberPickerYears.setValue(years);
+                            numberPickerMonths.setValue(months);
+                            Log.d("Animal", "Ani: " + animal.getYears() + " Luni: " + animal.getMonths());
 
                             SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault());
                             dateTextView.setText(dateFormat.format(animal.getArrivalDate().toDate()));
@@ -123,7 +150,7 @@ public class EditAnimalActivity extends AppCompatActivity {
                             descriptionEditText.setText(animal.getDescription());
                             Glide.with(this).load(animal.getPhoto()).into(imageAnimal);
                             sterilizedSwitch.setChecked(animal.isSterilized());
-                            sterilizedSwitch.setChecked(animal.isVaccinated());
+                            vaccinatedSwitch.setChecked(animal.isVaccinated());
 
                             if (animal.getGen().equals("Mascul")) {
                                 maleButton.setChecked(true);
@@ -181,10 +208,6 @@ public class EditAnimalActivity extends AppCompatActivity {
             breedEditText.setError("Introduceți rasa animalului");
             return false;
         }
-        if (TextUtils.isEmpty(ageEditText.getText().toString())) {
-            ageEditText.setError("Introduceți vârsta animalului");
-            return false;
-        }
         if (TextUtils.isEmpty(dateTextView.getText().toString())) {
             dateTextView.setError("Introduceți data de sosire");
             return false;
@@ -227,7 +250,8 @@ public class EditAnimalActivity extends AppCompatActivity {
         String speciesSelected = getSelectedRadioText(speciesGroup);
         String gender = getSelectedRadioText(genGroup);
         String breed = breedEditText.getText().toString();
-        int age = Integer.parseInt(ageEditText.getText().toString());
+//        int age = Integer.parseInt(ageEditText.getText().toString());
+
         Timestamp arrivalDate = parseDate(dateTextView.getText().toString());
         Log.d("Timestamp", "Arrival date: " + arrivalDate);
         Log.d("Timestamp", "Arrival date: " + dateTextView.getText().toString());
@@ -246,13 +270,16 @@ public class EditAnimalActivity extends AppCompatActivity {
         updateData.put("species", speciesSelected);
         updateData.put("gen", gender);
         updateData.put("breed", breed);
-        updateData.put("age", age);
+        updateData.put("years", years);
+        updateData.put("months", months);
         updateData.put("arrivalDate", arrivalDate);
         updateData.put("color", color);
         updateData.put("description", description);
         updateData.put("sterilized", sterilized);
         updateData.put("vaccinated", vaccinated);
         updateData.put("photo", animal.getPhoto());
+
+        Log.d("Varsta", "Ani: " + years + " Luni: " + months);
 
         if (imageUri != null) {
             deleteOldImage();
@@ -291,8 +318,9 @@ public class EditAnimalActivity extends AppCompatActivity {
     private void clearFields() {
         nameEditText.setText("");
         breedEditText.setText("");
-        ageEditText.setText("");
         dateTextView.setText("");
+        numberPickerYears.setValue(0);
+        numberPickerMonths.setValue(0);
         colorEditText.setText("");
         descriptionEditText.setText("");
         dogButton.setChecked(false);

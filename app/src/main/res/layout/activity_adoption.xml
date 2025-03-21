@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--Edittext for getting course Name-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/buttonBackToMain"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/ripple_custom"
+            android:maxWidth="64dp"
+            android:maxHeight="64dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_arrow_left"
+            tools:ignore="SpeakableTextPresentCheck" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="255dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Formular adoptie"
+            android:textSize="20sp" />
+
+        <Space
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Personal Information -->
+            <TextView
+                android:id="@+id/personal_information_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1. Informații personale suplimentare"
+                android:textSize="18sp"
+                android:paddingBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/phone_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Număr de telefon (pentru contact rapid)"
+                android:inputType="phone"
+                android:padding="12dp"
+                style="@style/EditTextAdoption"/>
+
+            <EditText
+                android:id="@+id/address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Adresă completă (unde va locui animalul)"
+                android:padding="12dp"
+                style="@style/EditTextAdoption"/>
+
+            <!-- Experience with Animals -->
+            <TextView
+                android:id="@+id/experience_with_animals_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"
+                android:text="2. Detalii despre experiența cu animalele"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textView_have_pets_before"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Ați mai avut animale de companie?"
+                android:textSize="16sp" />
+
+            <RadioGroup
+                android:id="@+id/have_pets_before_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/have_pets_before_yes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Da"
+                    android:textColor="@color/black"/>
+                <RadioButton
+                    android:id="@+id/have_pets_before_no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nu"
+                    android:textColor="@color/black"/>
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/error_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selectati o optiune"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/previous_pets_details"
+                style="@style/EditTextAdoption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Dacă Da: ce animale și pentru cât timp?"
+                android:inputType="textMultiLine"
+                android:padding="12dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/textView_have_other_pets"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Aveți alte animale în prezent?"
+                android:textSize="16sp" />
+
+            <RadioGroup
+                android:id="@+id/have_other_pets_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/have_other_pets_yes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Da"
+                    android:textColor="@color/black" />
+                <RadioButton
+                    android:id="@+id/have_other_pets_no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nu"
+                    android:textColor="@color/black" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/error_message2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Selectati o optiune"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/other_pets_details_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/pet_specie"
+                    style="@style/EditTextAdoption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Speciile animalelor"
+                    android:inputType="textMultiLine"
+                    android:padding="12dp"
+                    android:visibility="gone" />
+
+                <EditText
+                    android:id="@+id/pet_age"
+                    style="@style/EditTextAdoption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Vârsta acestora"
+                    android:inputType="textMultiLine"
+                    android:padding="12dp"
+                    android:visibility="gone" />
+
+                <EditText
+                    android:id="@+id/pet_temperament"
+                    style="@style/EditTextAdoption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Temperamentul acestora"
+                    android:inputType="textMultiLine"
+                    android:padding="12dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textView_adopted_before"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Ați mai adoptat un animal înainte?"
+                android:textSize="16sp" />
+
+            <RadioGroup
+                android:id="@+id/adopted_before_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/adopted_before_yes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Da"
+                    android:textColor="@color/black" />
+                <RadioButton
+                    android:id="@+id/adopted_before_no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nu"
+                    android:textColor="@color/black" />
+
+            </RadioGroup>
+
+            <!-- Environment where the animal will live -->
+            <TextView
+                android:id="@+id/error_message3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Selectati o optiune"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/environment_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"
+                android:text="3. Mediul în care va locui animalul"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textView_living_environment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Locuinta:"
+                android:textSize="16sp" />
+
+            <RadioGroup
+                android:id="@+id/living_environment_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/living_environment_apartment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Apartament"
+                    android:textColor="@color/black" />
+                <RadioButton
+                    android:id="@+id/living_environment_house"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Casă cu curte"
+                    android:textColor="@color/black" />
+
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/error_message4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Selectati o optiune"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/textView_rent_or_own"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Locuiți cu chirie sau în proprietate personală?"
+                android:textSize="16sp" />
+
+            <RadioGroup
+                android:id="@+id/rent_or_own_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chirie"
+                    android:textColor="@color/black" />
+                <RadioButton
+                    android:id="@+id/own"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Proprietate personală"
+                    android:textColor="@color/black" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/error_message5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Selectati o optiune"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/textView_owner_permission"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Dacă e chirie: proprietarul permite animale de companie?"
+                android:textSize="16sp" />
+
+            <RadioGroup
+                android:id="@+id/owner_permission_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/owner_permission_yes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Da"
+                    android:textColor="@color/black" />
+                <RadioButton
+                    android:id="@+id/owner_permission_no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nu"
+                    android:textColor="@color/black" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/error_message6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Selectati o optiune"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/textView_allergic_family_member"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Există membri ai familiei alergici la animale?"
+                android:textSize="16sp" />
+
+            <RadioGroup
+                android:id="@+id/allergic_family_member_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/allergic_family_member_yes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Da"
+                    android:textColor="@color/black" />
+                <RadioButton
+                    android:id="@+id/allergic_family_member_no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nu"
+                    android:textColor="@color/black" />
+            </RadioGroup>
+
+            <!-- Responsibilities and Commitment -->
+            <TextView
+                android:id="@+id/error_message7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Selectati o optiune"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/responsibilities_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"
+                android:text="4. Responsabilități și angajament"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/care_of_animal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Cine va avea grijă de animal zilnic?"
+                android:padding="12dp"
+                style="@style/EditTextAdoption"/>
+
+            <EditText
+                android:id="@+id/vacation_plan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Ce veți face cu animalul în cazul în care trebuie să plecați în vacanță?"
+                android:padding="12dp"
+                style="@style/EditTextAdoption"/>
+
+            <!-- Adoption Terms Acceptance -->
+
+            <!-- Optional Message to Shelter -->
+            <EditText
+                android:id="@+id/health_behavior_issues"
+                style="@style/EditTextAdoption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Ce veți face dacă apar probleme de sănătate sau comportamentale la animal?"
+                android:padding="12dp" />
+
+            <TextView
+                android:id="@+id/message_to_shelter_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"
+                android:text="6. Opțional:"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/message_to_shelter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Un mesaj către adăpost"
+                android:padding="12dp"
+                style="@style/EditTextAdoption"/>
+
+            <TextView
+                android:id="@+id/adoption_terms_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"
+                android:text="5. Acceptarea condițiilor de adopție"
+                android:textSize="18sp" />
+
+            <CheckBox
+                android:id="@+id/accept_terms"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:padding="12dp"
+                android:text="Ați citit și acceptați termenii și condițiile adopției?"
+                android:textColor="@color/black"/>
+
+            <Button
+                android:id="@+id/submit_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:padding="12dp"
+                android:text="Trimite" />
+
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

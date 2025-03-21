@@ -185,7 +185,7 @@ public class FavoritesActivity extends AppCompatActivity {
         // Populează datele animalului
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getAge() + (animal.getAge() == 1 ? " an" : " ani"));
+        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
         imageGen.setImageResource(animal.getGen().equals("Mascul") ? R.drawable.ic_male : R.drawable.ic_female);
         imageButtonFavoriteDel.setImageResource(R.drawable.ic_x);
 

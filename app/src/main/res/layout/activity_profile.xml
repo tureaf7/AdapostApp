@@ -368,7 +368,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/linearLayoutUser"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <ScrollView
             android:id="@+id/scrollViewProfileAdmin"
@@ -465,6 +466,32 @@
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
                             android:text="Editare animal"
+                            android:textColor="#000"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/adoptionApplicationLinearLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginBottom="13dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/adoptionApplicationImageView"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="0"
+                            app:srcCompat="@drawable/ic_adoption" />
+
+                        <TextView
+                            android:id="@+id/adoptionApplicationTextView"
+                            style="@style/profile_menu"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Cereri de adoptie"
                             android:textColor="#000"
                             android:textSize="16sp"
                             android:textStyle="bold" />

@@ -55,7 +55,7 @@
             android:orientation="vertical">
 
             <EditText
-                android:id="@+id/nameEditText"
+                android:id="@+id/phoneEditText"
                 style="@style/EditTextField"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/GenText"
+                    android:id="@+id/textViewMoreAnimals"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -182,14 +182,63 @@
                 android:importantForAutofill="no"
                 android:inputType="text" />
 
-            <EditText
-                android:id="@+id/ageEditText"
-                style="@style/EditTextField"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Varsta"
-                android:importantForAutofill="no"
-                android:inputType="number" />
+                android:layout_height="match_parent"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textView6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:text="Varsta" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="100dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:text="Ani" />
+
+                    <android.widget.NumberPicker
+                        android:id="@+id/numberPickerYears"
+                        android:layout_width="wrap_content"
+                        android:layout_height="100dp"
+                        android:layout_marginTop="15dp"
+                        android:theme="@style/AppTheme.Picker" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:text="Luni" />
+
+                    <android.widget.NumberPicker
+                        android:id="@+id/numberPickerMonths"
+                        android:layout_width="wrap_content"
+                        android:layout_height="100dp"
+                        android:layout_marginTop="15dp"
+                        android:orientation="horizontal"
+                        android:theme="@style/AppTheme.Picker" />
+                </LinearLayout>
+
+            </LinearLayout>
 
             <EditText
                 android:id="@+id/colorEditText"
@@ -207,7 +256,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Descriere"
                 android:importantForAutofill="no"
-                android:inputType="text" />
+                android:inputType="textMultiLine"/>
 
             <LinearLayout
                 android:layout_width="match_parent"

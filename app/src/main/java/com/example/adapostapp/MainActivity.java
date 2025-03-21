@@ -3,7 +3,11 @@ package com.example.adapostapp;
 import static android.view.View.VISIBLE;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,10 +19,16 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.Manifest;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.example.adapostapp.utils.UserUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -40,6 +50,9 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private ProgressBar progressBar;
     private TextView adoptInfoText, donatText, voluntarText, noneAnimalTextView;
+    private FirebaseUser user;
+    private static final int NOTIFICATION_PERMISSION_CODE = 101;
+    private static final String CHANNEL_ID = "adapost_notifications";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         // Inițializări Firebase
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
+        user = mAuth.getCurrentUser();
 
         notificationButton.setOnClickListener(v -> {
             // TODO: Navigare către pagina de notificări
@@ -83,13 +97,9 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        horizontalLinearLayout.removeAllViews();
         fetchAnimals();
+        checkNotificationPermission();
     }
 
     @SuppressLint("SetTextI18n")
@@ -124,9 +134,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readAnimalsFromDB() {
-        Query query = db.collection("Animals");
-
-        query.get().addOnSuccessListener(queryDocumentSnapshots -> {
+        db.collection("Animals").limit(5).get().addOnSuccessListener(queryDocumentSnapshots -> {
             if(queryDocumentSnapshots.isEmpty()){
                 Log.d("Firebase", "Nu au fost găsite animale.");
                 progressBar.setVisibility(View.GONE);
@@ -154,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readAnimalsFromDB(List<String> favoriteAnimalIds) {
-        Query query = db.collection("Animals");
+        Query query = db.collection("Animals").limit(5);
 
         query.get().addOnSuccessListener(queryDocumentSnapshots -> {
             if(queryDocumentSnapshots.isEmpty()){
@@ -194,10 +202,11 @@ public class MainActivity extends AppCompatActivity {
         TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
         TextView animalAge = itemView.findViewById(R.id.textViewAge);
         ImageButton imageButtonFavorite = itemView.findViewById(R.id.imageButtonFavorite);
+        imageButtonFavorite.setVisibility(View.GONE);
 
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getAge() + (animal.getAge() == 1 ? " an" : " ani"));
+        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
         imageGen.setImageResource(animal.getGen().equals("Mascul") ? R.drawable.ic_male : R.drawable.ic_female);
 
         if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
@@ -206,6 +215,8 @@ public class MainActivity extends AppCompatActivity {
                     .error(R.drawable.ic_launcher_foreground)
                     .into(animalPhoto);
         }
+
+        checkUserRole(user, imageButtonFavorite);
 
         imageButtonFavorite.setTag(favoriteTag);
         if ("favorite".equals(imageButtonFavorite.getTag())) {
@@ -245,17 +256,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String uid = currentUser.getUid();
-
-        db.collection("users").document(uid)
-                .update("favorites", FieldValue.arrayUnion(db.collection("Animals").document(documentId)))
+        DocumentReference userRef = db.collection("users").document(uid);
+        userRef.update("favorites", FieldValue.arrayUnion(db.collection("Animals").document(documentId)))
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "Animal adăugat la favorite!");
-                    Toast.makeText(MainActivity.this, "Animal adăugat în favorite!", Toast.LENGTH_SHORT).show();
                     imageButtonFavorite.setImageResource(R.drawable.ic_favorite_red);
                     imageButtonFavorite.setTag("favorite");
-//                    animal.setFavorite(true);
+                    Log.d("Firestore", "Adăugat la favorite");
                 })
-                .addOnFailureListener(e -> Log.e("Firestore", "Eroare la adăugarea în favorite: ", e));
+                .addOnFailureListener(e -> {
+                    Log.w("Firestore", "Eroare la adăugarea la favorite", e);
+                    Toast.makeText(this, "Eroare", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void removeFromFavorite(ImageButton imageButtonFavorite, String documentId, Animal animal) {
@@ -266,17 +277,71 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String uid = currentUser.getUid();
-
-        db.collection("users").document(uid)
-                .update("favorites", FieldValue.arrayRemove(db.collection("Animals").document(documentId)))
+        DocumentReference userRef = db.collection("users").document(uid);
+        userRef.update("favorites", FieldValue.arrayRemove(db.collection("Animals").document(documentId)))
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "Animal eliminat din favorite!");
-                    Toast.makeText(MainActivity.this, "Animal eliminat din favorite!", Toast.LENGTH_SHORT).show();
                     imageButtonFavorite.setImageResource(R.drawable.ic_favorite);
                     imageButtonFavorite.setTag("not_favorite");
-//                    animal.setFavorite(false);
+                    Log.d("Firestore", "Eliminat din favorite");
                 })
-                .addOnFailureListener(e -> Log.e("Firestore", "Eroare la eliminarea din favorite: ", e));
+                .addOnFailureListener(e -> {
+                    Log.w("Firestore", "Eroare la eliminarea din favorite", e);
+                    Toast.makeText(this, "Eroare", Toast.LENGTH_SHORT).show();
+                });
     }
 
+    private void checkUserRole(FirebaseUser user, ImageButton imageButtonFavorite) {
+        if (user == null) return;
+
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && documentSnapshot.contains("role")) {
+                        String role = documentSnapshot.getString("role");
+                        if ("user".equals(role)) {
+                            imageButtonFavorite.setVisibility(VISIBLE);
+                        }
+                    }
+                });
+    }
+
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE);
+            } else {
+                Log.d("Notificări", "Permisiunea deja acordată!");
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("Notificări", "Permisiune acordată!");
+                showTestNotification(); // Afișează notificarea după ce permisiunea a fost acordată
+            } else {
+                Toast.makeText(this, "Permisiunea pentru notificări a fost refuzată!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void showTestNotification() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Notificări Adăpost", NotificationManager.IMPORTANCE_DEFAULT);
+                notificationManager.createNotificationChannel(channel);
+            }
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle("Notificare Test")
+                    .setContentText("Aceasta este o notificare de test!")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+            notificationManager.notify(1, builder.build());
+        }
+    }
 }
