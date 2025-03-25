@@ -28,7 +28,7 @@
 
         <TextView
             android:id="@+id/textView"
-            android:layout_width="255dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
@@ -37,8 +37,7 @@
 
         <Space
             android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_weight="1" />
+            android:layout_height="64dp" />
 
     </LinearLayout>
 
@@ -48,7 +47,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -57,39 +56,56 @@
                 android:id="@+id/personal_information_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:textStyle="bold"
                 android:text="1. Informații personale suplimentare"
-                android:textSize="18sp"
-                android:paddingBottom="8dp"/>
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/textView7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/numar_telefon"
+                android:textSize="16sp" />
 
             <EditText
                 android:id="@+id/phone_number"
+                style="@style/EditTextAdoption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Introduceti numarul"
+                android:inputType="phone"
+                android:padding="12dp" />
+
+            <TextView
+                android:id="@+id/textView8"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="Număr de telefon (pentru contact rapid)"
-                android:inputType="phone"
-                android:padding="12dp"
-                style="@style/EditTextAdoption"/>
+                android:text="@string/adresa_animal"
+                android:textSize="16sp" />
 
             <EditText
                 android:id="@+id/address"
+                style="@style/EditTextAdoption"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Adresă completă (unde va locui animalul)"
-                android:padding="12dp"
-                style="@style/EditTextAdoption"/>
+                android:hint="Introduceti adresa"
+                android:padding="12dp" />
 
             <!-- Experience with Animals -->
             <TextView
                 android:id="@+id/experience_with_animals_title"
+                style="bol"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:paddingTop="16dp"
                 android:paddingBottom="8dp"
+                android:textStyle="bold"
                 android:text="2. Detalii despre experiența cu animalele"
-                android:textSize="18sp" />
+                android:textSize="20sp" />
 
             <TextView
                 android:id="@+id/textView_have_pets_before"
@@ -108,13 +124,13 @@
                     android:id="@+id/have_pets_before_yes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Da"
+                    android:text="@string/da"
                     android:textColor="@color/black"/>
                 <RadioButton
                     android:id="@+id/have_pets_before_no"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nu"
+                    android:text="@string/nu"
                     android:textColor="@color/black"/>
             </RadioGroup>
 
@@ -126,15 +142,30 @@
                 android:textColor="@android:color/holo_red_dark"
                 android:visibility="gone" />
 
-            <EditText
-                android:id="@+id/previous_pets_details"
-                style="@style/EditTextAdoption"
+            <LinearLayout
+                android:id="@+id/previous_pet_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Dacă Da: ce animale și pentru cât timp?"
-                android:inputType="textMultiLine"
-                android:padding="12dp"
-                android:visibility="gone" />
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/textView16"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/animale_precedente"
+                    android:textSize="16sp" />
+
+                <EditText
+                    android:id="@+id/previous_pets_details"
+                    style="@style/EditTextAdoption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Numele si perioada de timp"
+                    android:inputType="textMultiLine"
+                    android:padding="12dp" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/textView_have_other_pets"
@@ -154,13 +185,13 @@
                     android:id="@+id/have_other_pets_yes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Da"
+                    android:text="@string/da"
                     android:textColor="@color/black" />
                 <RadioButton
                     android:id="@+id/have_other_pets_no"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nu"
+                    android:text="@string/nu"
                     android:textColor="@color/black" />
             </RadioGroup>
 
@@ -177,40 +208,59 @@
                 android:id="@+id/other_pets_details_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/textView12"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/speciile_animalelor"
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/pet_specie"
                     style="@style/EditTextAdoption"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:hint="Speciile animalelor"
+                    android:hint="@string/speciile_animalelor"
                     android:inputType="textMultiLine"
-                    android:padding="12dp"
-                    android:visibility="gone" />
+                    android:padding="12dp" />
+
+                <TextView
+                    android:id="@+id/textView13"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/varsta_animalelor"
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/pet_age"
                     style="@style/EditTextAdoption"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:hint="Vârsta acestora"
+                    android:hint="@string/varsta_animalelor"
                     android:inputType="textMultiLine"
-                    android:padding="12dp"
-                    android:visibility="gone" />
+                    android:padding="12dp" />
+
+                <TextView
+                    android:id="@+id/textView14"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/temperamentul_animalelor"
+                    android:textSize="16sp" />
 
                 <EditText
                     android:id="@+id/pet_temperament"
                     style="@style/EditTextAdoption"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:hint="Temperamentul acestora"
+                    android:hint="@string/temperamentul_animalelor"
                     android:inputType="textMultiLine"
-                    android:padding="12dp"
-                    android:visibility="gone" />
+                    android:padding="12dp" />
             </LinearLayout>
 
             <TextView
@@ -230,13 +280,13 @@
                     android:id="@+id/adopted_before_yes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Da"
+                    android:text="@string/da"
                     android:textColor="@color/black" />
                 <RadioButton
                     android:id="@+id/adopted_before_no"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nu"
+                    android:text="@string/nu"
                     android:textColor="@color/black" />
 
             </RadioGroup>
@@ -258,7 +308,8 @@
                 android:paddingTop="16dp"
                 android:paddingBottom="8dp"
                 android:text="3. Mediul în care va locui animalul"
-                android:textSize="18sp" />
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/textView_living_environment"
@@ -334,32 +385,42 @@
                 android:textColor="@android:color/holo_red_dark"
                 android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/textView_owner_permission"
+            <LinearLayout
+                android:id="@+id/owner_permission_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Dacă e chirie: proprietarul permite animale de companie?"
-                android:textSize="16sp" />
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-            <RadioGroup
-                android:id="@+id/owner_permission_group"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <RadioButton
-                    android:id="@+id/owner_permission_yes"
+                <TextView
+                    android:id="@+id/textView_owner_permission"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Dacă e chirie: proprietarul permite animale de companie?"
+                    android:textSize="16sp" />
+
+                <RadioGroup
+                    android:id="@+id/owner_permission_group"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Da"
-                    android:textColor="@color/black" />
-                <RadioButton
-                    android:id="@+id/owner_permission_no"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Nu"
-                    android:textColor="@color/black" />
-            </RadioGroup>
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/owner_permission_yes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/da"
+                        android:textColor="@color/black" />
+
+                    <RadioButton
+                        android:id="@+id/owner_permission_no"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/nu"
+                        android:textColor="@color/black" />
+                </RadioGroup>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/error_message6"
@@ -386,13 +447,13 @@
                     android:id="@+id/allergic_family_member_yes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Da"
+                    android:text="@string/da"
                     android:textColor="@color/black" />
                 <RadioButton
                     android:id="@+id/allergic_family_member_no"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nu"
+                    android:text="@string/nu"
                     android:textColor="@color/black" />
             </RadioGroup>
 
@@ -407,42 +468,65 @@
 
             <TextView
                 android:id="@+id/responsibilities_title"
+                style="bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:paddingTop="16dp"
                 android:paddingBottom="8dp"
                 android:text="4. Responsabilități și angajament"
-                android:textSize="18sp" />
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView9"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/grija_animal"
+                android:layout_marginTop="16dp"
+                android:textSize="16sp" />
 
             <EditText
                 android:id="@+id/care_of_animal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Cine va avea grijă de animal zilnic?"
+                android:hint="@string/grija_animal"
                 android:padding="12dp"
                 style="@style/EditTextAdoption"/>
+
+            <TextView
+                android:id="@+id/textView10"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/animal_caz_vacanta"
+                android:layout_marginTop="16dp"
+                android:textSize="16sp" />
 
             <EditText
                 android:id="@+id/vacation_plan"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Ce veți face cu animalul în cazul în care trebuie să plecați în vacanță?"
+                android:hint="@string/animal_caz_vacanta"
                 android:padding="12dp"
                 style="@style/EditTextAdoption"/>
 
             <!-- Adoption Terms Acceptance -->
 
             <!-- Optional Message to Shelter -->
+            <TextView
+                android:id="@+id/textView11"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/probleme_sanatate_animal"
+                android:textSize="16sp" />
+
             <EditText
                 android:id="@+id/health_behavior_issues"
                 style="@style/EditTextAdoption"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Ce veți face dacă apar probleme de sănătate sau comportamentale la animal?"
+                android:hint="@string/probleme_sanatate_animal"
                 android:padding="12dp" />
 
             <TextView
@@ -452,17 +536,17 @@
                 android:layout_marginTop="20dp"
                 android:paddingTop="16dp"
                 android:paddingBottom="8dp"
-                android:text="6. Opțional:"
-                android:textSize="18sp" />
+                android:text="@string/mesaj_adapost"
+                android:textSize="20sp" />
 
             <EditText
                 android:id="@+id/message_to_shelter"
+                style="@style/EditTextAdoption"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="Un mesaj către adăpost"
-                android:padding="12dp"
-                style="@style/EditTextAdoption"/>
+                android:hint="Introduceti mesajul"
+                android:padding="12dp" />
 
             <TextView
                 android:id="@+id/adoption_terms_title"
@@ -472,16 +556,29 @@
                 android:paddingTop="16dp"
                 android:paddingBottom="8dp"
                 android:text="5. Acceptarea condițiilor de adopție"
-                android:textSize="18sp" />
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-            <CheckBox
-                android:id="@+id/accept_terms"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:padding="12dp"
-                android:text="Ați citit și acceptați termenii și condițiile adopției?"
-                android:textColor="@color/black"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/accept_terms"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:textColor="@color/black"/>
+
+                <TextView
+                    android:id="@+id/accept_terms_textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/submit_button"

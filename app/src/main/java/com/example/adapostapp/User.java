@@ -11,8 +11,7 @@ public class User {
     private String email; // Add email
     private String role;
 
-    public User() {
-    } // Important constructor
+    public User() {} // Important constructor
 
     public User(String name, String profileImageUrl, String email, String role) {
         this.name = name;

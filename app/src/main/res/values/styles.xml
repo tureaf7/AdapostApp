@@ -62,9 +62,16 @@
         <item name="android:textColor">@color/black</item>
         <item name="android:textColorHint">@color/hintColor</item>
         <item name="android:minHeight">48dp</item>
+        <item name="android:layout_marginTop">8dp</item>
     </style>
 
     <style name="AppTheme.Picker" parent="Theme.AppCompat.Light.NoActionBar" >
         <item name="android:textColorPrimary">@android:color/black</item>
     </style>
+
+    <style name="CustomSpinnerStyle" parent="Widget.AppCompat.Spinner">
+        <item name="android:popupBackground">#FFFFFF</item> <!-- Fundal alb pentru dropdown -->
+        <item name="android:background">@drawable/spinner_background</item> <!-- Fundal spinner -->
+    </style>
+
 </resources>

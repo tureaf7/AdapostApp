@@ -1,12 +1,13 @@
 package com.example.adapostapp;
 
 import android.os.Bundle;
-import android.util.Log;
+import android.text.Html;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -17,10 +18,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AdoptionActivity extends AppCompatActivity {
     private EditText numar_telefon, adresa, animale_precedente_detalii, animal_curent_specie, animal_curent_varsta,
@@ -30,15 +32,23 @@ public class AdoptionActivity extends AppCompatActivity {
     private Button button_submit;
     private CheckBox termeni_conditii;
     private TextView error_message, error_message2, error_message3, error_message4, error_message5,
-            error_message6, error_message7;
+            error_message6, error_message7, accept_terms_textView;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private FirebaseUser firebaseUser;
+    private String animalId;
+    private LinearLayout other_pets_details_layout, previous_pet_layout, owner_permission_layout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_adoption);
+        animalId = getIntent().getStringExtra("animal");
+
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        firebaseUser = mAuth.getCurrentUser();
+        isAdopted();
 
         numar_telefon = findViewById(R.id.phone_number);
         adresa = findViewById(R.id.address);
@@ -50,7 +60,12 @@ public class AdoptionActivity extends AppCompatActivity {
         grija_animal_vacanta = findViewById(R.id.vacation_plan);
         animal_probleme_sanatate = findViewById(R.id.health_behavior_issues);
         mesaj_adapost = findViewById(R.id.message_to_shelter);
+        accept_terms_textView = findViewById(R.id.accept_terms_textView);
         termeni_conditii = findViewById(R.id.accept_terms);
+        accept_terms_textView.setText(Html.fromHtml("Ați citit și acceptați <font color='#06D6A0'><b>termenii și condițiile adopției?</b></font>"));
+        previous_pet_layout = findViewById(R.id.previous_pet_layout);
+        other_pets_details_layout = findViewById(R.id.other_pets_details_layout);
+        owner_permission_layout = findViewById(R.id.owner_permission_layout);
 
         animale_precedente = findViewById(R.id.have_pets_before_group);
         animal_curent = findViewById(R.id.have_other_pets_group);
@@ -71,10 +86,6 @@ public class AdoptionActivity extends AppCompatActivity {
         button_back_to_main = findViewById(R.id.buttonBackToMain);
         button_submit = findViewById(R.id.submit_button);
 
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        firebaseUser = mAuth.getCurrentUser();
-
         button_back_to_main.setOnClickListener(v -> onBackPressed());
         button_submit.setOnClickListener(v -> {
             if (validateFields()){
@@ -88,9 +99,9 @@ public class AdoptionActivity extends AppCompatActivity {
             if (checkedId != -1){
                 String selectedOption = getSelectedRadioText(animale_precedente);
                 if ("Da".equals(selectedOption)){
-                    animale_precedente_detalii.setVisibility(View.VISIBLE);
+                    previous_pet_layout.setVisibility(View.VISIBLE);
                 } else {
-                    animale_precedente_detalii.setVisibility(View.GONE);
+                    previous_pet_layout.setVisibility(View.GONE);
                 }
             }
         });
@@ -101,17 +112,41 @@ public class AdoptionActivity extends AppCompatActivity {
                 String selectedOption = getSelectedRadioText(animal_curent);
                 if ("Da".equals(selectedOption)) {
                     // Afișează câmpurile pentru animalul curent
-                    animal_curent_specie.setVisibility(View.VISIBLE);
-                    animal_curent_varsta.setVisibility(View.VISIBLE);
-                    animal_curent_temperament.setVisibility(View.VISIBLE);
+                    other_pets_details_layout.setVisibility(View.VISIBLE);
                 } else {
                     // Ascunde câmpurile pentru animalul curent
-                    animal_curent_specie.setVisibility(View.GONE);
-                    animal_curent_varsta.setVisibility(View.GONE);
-                    animal_curent_temperament.setVisibility(View.GONE);
+                    other_pets_details_layout.setVisibility(View.GONE);
                 }
             }
         });
+
+        chirie.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId != -1) {
+                String selectedOption = getSelectedRadioText(chirie);
+                if ("Chirie".equals(selectedOption)) {
+                    owner_permission_layout.setVisibility(View.VISIBLE);
+                } else {
+                    owner_permission_layout.setVisibility(View.GONE);
+                }
+            }
+        });
+    }
+
+    private void isAdopted(){
+        db.collection("Animals")
+                .document(animalId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Animal animal = documentSnapshot.toObject(Animal.class);
+                        if (animal != null) {
+                            if (animal.isAdopted()) {
+                                Toast.makeText(this, "Animalul este deja adoptat!", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        }
+                    }
+                });
     }
 
     private boolean validateFields() {
@@ -154,10 +189,11 @@ public class AdoptionActivity extends AppCompatActivity {
         if (getSelectedRadioText(chirie).isEmpty()){
             error_message5.setVisibility(View.VISIBLE);
             return false;
-        }
-        if (getSelectedRadioText(permisiune_proprietare_chirie).isEmpty()){
-            error_message6.setVisibility(View.VISIBLE);
-            return false;
+        }else if ("Da".equals(getSelectedRadioText(chirie))){
+            if (getSelectedRadioText(permisiune_proprietare_chirie).isEmpty()){
+                error_message6.setVisibility(View.VISIBLE);
+                return false;
+            }
         }
         if (getSelectedRadioText(alergie).isEmpty()){
             error_message7.setVisibility(View.VISIBLE);
@@ -196,7 +232,6 @@ public class AdoptionActivity extends AppCompatActivity {
     }
 
     private void saveFormData() {
-        String animalId = getIntent().getStringExtra("animal");
         String userId = firebaseUser.getUid();
         String numar_telefon = this.numar_telefon.getText().toString();
         String adresa = this.adresa.getText().toString();
@@ -208,45 +243,37 @@ public class AdoptionActivity extends AppCompatActivity {
         String grija_animal_vacanta = this.grija_animal_vacanta.getText().toString();
         String animal_probleme_sanatate = this.animal_probleme_sanatate.getText().toString();
         String mesaj_adapost = this.mesaj_adapost.getText().toString();
-        String animale_precedente = getSelectedRadioText(this.animale_precedente);
-        String animal_curent = getSelectedRadioText(this.animal_curent);
-        String animale_adoptate = getSelectedRadioText(this.animale_adoptate);
+        boolean animale_precedente = "Da".equals(getSelectedRadioText(this.animale_precedente));
+        boolean animal_curent = "Da".equals(getSelectedRadioText(this.animal_curent));
+        boolean animale_adoptate = "Da".equals(getSelectedRadioText(this.animale_adoptate));
         String locuinta = getSelectedRadioText(this.locuinta);
         String chirie_proprietate = getSelectedRadioText(this.chirie);
-        String permisiune_proprietare_chirie = getSelectedRadioText(this.permisiune_proprietare_chirie);
-        String alergie = getSelectedRadioText(this.alergie);
+        boolean permisiune_proprietare_chirie = "Da".equals(getSelectedRadioText(this.permisiune_proprietare_chirie));
+        boolean alergie = "Da".equals(getSelectedRadioText(this.alergie));
 
+        AdoptionApplication adoptionApplication = new AdoptionApplication(userId, animalId, numar_telefon, adresa, animale_precedente_detalii,
+                animal_curent_specie, animal_curent_varsta, animal_curent_temperament, grija_animal,
+                grija_animal_vacanta, animal_probleme_sanatate, mesaj_adapost, animale_precedente, animal_curent,
+                animale_adoptate, locuinta, chirie_proprietate, permisiune_proprietare_chirie, alergie, "În așteptare", null, "");
 
-        Map<String, Object> formData = new HashMap<>();
-        formData.put("user_id", userId);
-        formData.put("animal_id", animalId);
-        formData.put("timestamp", com.google.firebase.firestore.FieldValue.serverTimestamp());
-        formData.put("phone_number", numar_telefon);
-        formData.put("address", adresa);
-        formData.put("previous_pets_details", animale_precedente_detalii);
-        formData.put("pet_specie", animal_curent_specie);
-        formData.put("pet_age", animal_curent_varsta);
-        formData.put("pet_temperament", animal_curent_temperament);
-        formData.put("care_of_animal", grija_animal);
-        formData.put("vacation_plan", grija_animal_vacanta);
-        formData.put("health_behavior_issues", animal_probleme_sanatate);
-        formData.put("message_to_shelter", mesaj_adapost);
-        formData.put("have_pets_before", animale_precedente);
-        formData.put("have_other_pets", animal_curent);
-        formData.put("adopted_before", animale_adoptate);
-        formData.put("living_environment", locuinta);
-        formData.put("rent_or_own", chirie_proprietate);
-        formData.put("owner_permission", permisiune_proprietare_chirie);
-        formData.put("allergic_family_member", alergie);
-
-
-        db.collection("AdoptionForms").add(formData)
+        db.collection("AdoptionApplications").add(adoptionApplication)
                 .addOnSuccessListener(documentReference -> {
-                    Toast.makeText(this, "Formularul a fost trimis cu succes!", Toast.LENGTH_SHORT).show();
-                    finish();
-                }).addOnFailureListener(e -> {
+                    // Adaugă referința documentului cererii în array-ul 'adoptionRequests' al utilizatorului
+                    db.collection("users")
+                            .document(userId)
+                            .update("adoptionApplications", FieldValue.arrayUnion(documentReference.getId()))
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(this, "Formularul a fost trimis cu succes!", Toast.LENGTH_SHORT).show();
+                                finish();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(this, "Eroare la trimiterea formularului: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .addOnFailureListener(e -> {
                     Toast.makeText(this, "Eroare la trimiterea formularului: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+
     }
 
     private String getSelectedRadioText(RadioGroup radioGroup) {

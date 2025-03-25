@@ -15,4 +15,16 @@
     <string name="adoptInfo"><u>Citeste despre procesul de adoptie</u></string>
     <string name="voluntarText"><u>Devino voluntar</u></string>
     <string name="donatText"><u>Donează</u></string>
+    <string name="numar_telefon">Număr de telefon (pentru contact rapid)</string>
+    <string name="adresa_animal">Adresă completă (unde va locui animalul)</string>
+    <string name="speciile_animalelor">Speciile animalelor</string>
+    <string name="varsta_animalelor">Vârsta animalelor</string>
+    <string name="temperamentul_animalelor">Temperamentul animalelor</string>
+    <string name="da">Da</string>
+    <string name="nu">Nu</string>
+    <string name="animal_caz_vacanta">Ce veți face cu animalul în cazul în care trebuie să plecați în vacanță?</string>
+    <string name="probleme_sanatate_animal">Ce veți face dacă apar probleme de sănătate sau comportamentale la animal?</string>
+    <string name="mesaj_adapost">Optional: Un mesaj către adăpost</string>
+    <string name="grija_animal">Cine va avea grijă de animal zilnic?</string>
+    <string name="animale_precedente">Dacă Da: ce animale și pentru cât timp?</string>
 </resources>

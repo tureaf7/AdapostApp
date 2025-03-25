@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
 import com.bumptech.glide.Glide;
+import com.example.adapostapp.utils.UserUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -80,73 +81,66 @@ public class ListAnimalActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        gridLayout.removeAllViews();
-        linearLayout.removeAllViews();
         readAnimalsFromDB();
     }
 
     private void readAnimalsFromDB() {
         progressBar.setVisibility(View.VISIBLE);
+        UserUtils.checkUserRole(user, new UserUtils.UserRoleCallback() {
+            @Override
+            public void onRoleRetrieved(String role) {
 
-        // Query pentru animale
-        db.collection("Animals")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (queryDocumentSnapshots.isEmpty()) {
-                        Log.d("Firebase", "Nu au fost găsite animale.");
-                        noneFavoriteTextView.setVisibility(View.VISIBLE);
-                    } else {
-                        // Dacă utilizatorul este logat, verificăm rolul
-                        if (user != null) {
-                            db.collection("users")
-                                    .document(user.getUid())
-                                    .get()
-                                    .addOnSuccessListener(documentSnapshot -> {
-                                        String role = documentSnapshot.exists() ? documentSnapshot.getString("role") : "user";
-                                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                                            Animal animal = document.toObject(Animal.class);
-                                            if ("admin".equals(role)) {
-                                                addCardToUIAdmin(animal);
-                                            } else {
-                                                addAnimalCardToUI(animal);
-                                            }
+                db.collection("Animals")
+                        .get()
+                        .addOnSuccessListener(queryDocumentSnapshots -> {
+                            if (queryDocumentSnapshots.isEmpty()) {
+                                Log.d("Firebase", "Nu au fost găsite animale.");
+                                noneFavoriteTextView.setVisibility(View.VISIBLE);
+                            } else {
+                                gridLayout.removeAllViews();
+                                linearLayout.removeAllViews();
+
+                                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                                    Animal animal = document.toObject(Animal.class);
+                                    if ("admin".equals(role)) {
+                                        addCardToUIAdmin(animal);
+                                    } else {
+                                        if (!animal.isAdopted()) {
+                                            addAnimalCardToUI(animal);
                                         }
-                                        if ("admin".equals(role)){
-                                            View itemView = LayoutInflater.from(this).inflate(R.layout.add_animal, linearLayout, false);
-                                            itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
-                                                Intent intent = new Intent(this, AddAnimalActivity.class);
-                                                startActivity(intent);
-                                            });
-                                            linearLayout.addView(itemView);
-                                        }
-                                        progressBar.setVisibility(View.GONE);
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Log.w("Firebase", "Eroare la obținerea rolului utilizatorului.", e);
-                                        progressBar.setVisibility(View.GONE);
-                                    });
-                        } else {
-                            // Dacă nu este logat, afișăm animalele ca utilizator obișnuit
-                            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                                Animal animal = document.toObject(Animal.class);
-                                addAnimalCardToUI(animal);
+                                    }
+                                }
+
+                            }
+                            // Adăugăm butonul doar dacă utilizatorul este admin
+                            if ("admin".equals(role)) {
+                                View itemView = LayoutInflater.from(ListAnimalActivity.this)
+                                        .inflate(R.layout.add_animal, linearLayout, false);
+
+                                itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
+                                    Intent intent = new Intent(ListAnimalActivity.this, AddAnimalActivity.class);
+                                    startActivity(intent);
+                                });
+                                Log.d("Firebase", "Utilizatorul este admin. Se afișează butonul de adăugare.");
+                                linearLayout.addView(itemView);
                             }
                             progressBar.setVisibility(View.GONE);
-                        }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.w("Firebase", "Error getting documents.", e);
-                    Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
-                    progressBar.setVisibility(View.GONE);
-                });
-    }
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.w("Firebase", "Eroare la preluarea datelor", e);
+                            Toast.makeText(ListAnimalActivity.this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
+                            noneFavoriteTextView.setVisibility(View.VISIBLE);
+                            progressBar.setVisibility(View.GONE);
+                        });
+            }
 
+            @Override
+            public void onError(Exception e) {
+                Log.w("Firebase", "Eroare la obținerea rolului utilizatorului.", e);
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+    }
 
 
     private void addAnimalCardToUI(Animal animal) {
@@ -161,20 +155,15 @@ public class ListAnimalActivity extends AppCompatActivity {
         TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
         TextView animalAge = itemView.findViewById(R.id.textViewAge);
 
-
         // Populează datele animalului
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
         animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
 
+
         if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
             Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
         }
-
-        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        int cardWidth = getResources().getDimensionPixelSize(R.dimen.card_width);
-        int columnCount = screenWidth / cardWidth;
-        gridLayout.setColumnCount(columnCount);
 
         // Setează lățimea cardului pentru a ocupa jumătate din ecran
         GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams();
@@ -202,17 +191,16 @@ public class ListAnimalActivity extends AppCompatActivity {
         TextView animalName = itemView.findViewById(R.id.textViewName);
         TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
         TextView animalAge = itemView.findViewById(R.id.textViewAge);
-        TextView animalMonths = itemView.findViewById(R.id.textViewMonths);
+        TextView animalAdoptedStatus = itemView.findViewById(R.id.textViewAdoptedStatus);
         ImageButton imageEdit = itemView.findViewById(R.id.imageEdit);
         ImageButton imageButtonDelete = itemView.findViewById(R.id.imageButtonDelete);
 
         // Populează datele animalului
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
-        animalMonths.setText(animal.getMonths() + (animal.getMonths() == 1 ? " luna" : " luni"));
-        Log.d("Firebase", "Varsta animal: " + animal.getYears() +" ani " + animal.getMonths() + "luni");
-
+        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani") +
+                 " si " + animal.getMonths() + (animal.getMonths() == 1 ? " luna" : " luni"));
+        animalAdoptedStatus.setText(animal.isAdopted() ? "Adoptat" : "Disponibil");
 
         if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
             Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
@@ -222,7 +210,9 @@ public class ListAnimalActivity extends AppCompatActivity {
             intent.putExtra("animal", animal.getId());
             startActivity(intent);
         });
-        imageButtonDelete.setOnClickListener(v -> {showDeleteConfirmationDialog(animal.getId());});
+        imageButtonDelete.setOnClickListener(v -> {
+            showDeleteConfirmationDialog(animal.getId());
+        });
 
         itemView.setOnClickListener(v -> {
             Intent intent = new Intent(this, AnimalProfileActivity.class);

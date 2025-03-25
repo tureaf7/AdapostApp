@@ -46,6 +46,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:text="Nume"
                     android:textSize="22sp"
                     tools:ignore="Suspicious0dp" />
 
@@ -72,17 +73,20 @@
                         android:id="@+id/textViewBreed"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginRight="20dp" />
+                        android:layout_marginRight="20dp"
+                        android:text="rasa" />
 
                     <TextView
                         android:id="@+id/textViewAge"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:text="varsta" />
 
                     <TextView
-                        android:id="@+id/textViewMonths"
+                        android:id="@+id/textViewAdoptedStatus"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:text="adoptat" />
                 </LinearLayout>
 
                 <ImageButton

@@ -98,8 +98,13 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        fetchAnimals();
         checkNotificationPermission();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchAnimals();
     }
 
     @SuppressLint("SetTextI18n")
@@ -134,63 +139,61 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readAnimalsFromDB() {
-        db.collection("Animals").limit(5).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            if(queryDocumentSnapshots.isEmpty()){
-                Log.d("Firebase", "Nu au fost găsite animale.");
-                progressBar.setVisibility(View.GONE);
-                noneAnimalTextView.setVisibility(View.VISIBLE);
-                return;
-            }
+        db.collection("Animals").whereEqualTo("adopted", false).limit(5)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    progressBar.setVisibility(View.GONE);
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Log.d("Firebase", "Nu au fost găsite animale.");
+                        noneAnimalTextView.setVisibility(View.VISIBLE);
+                        return;
+                    }
 
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Animal animal = document.toObject(Animal.class);
-                addAnimalCardToUI(animal, "");
-            }
-            progressBar.setVisibility(View.GONE);
-            View itemView = LayoutInflater.from(this).inflate(R.layout.view_more, horizontalLinearLayout, false);
-            ImageButton imageButton = itemView.findViewById(R.id.imageButton);
-            imageButton.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, ListAnimalActivity.class);
-                startActivity(intent);
-            });
-            horizontalLinearLayout.addView(itemView);
-        }).addOnFailureListener(e -> {
-            Log.w("Firebase", "Error getting documents.", e);
-            Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
-            progressBar.setVisibility(View.GONE);
-        });
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Animal animal = document.toObject(Animal.class);
+                        addAnimalCardToUI(animal, "");
+                    }
+                    View itemView = LayoutInflater.from(this).inflate(R.layout.view_more, horizontalLinearLayout, false);
+                    ImageButton imageButton = itemView.findViewById(R.id.imageButton);
+                    imageButton.setOnClickListener(v -> {
+                        Intent intent = new Intent(MainActivity.this, ListAnimalActivity.class);
+                        startActivity(intent);
+                    });
+                    horizontalLinearLayout.addView(itemView);
+                }).addOnFailureListener(e -> {
+                    Log.w("Firebase", "Error getting documents.", e);
+                    Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void readAnimalsFromDB(List<String> favoriteAnimalIds) {
-        Query query = db.collection("Animals").limit(5);
+        db.collection("Animals").whereEqualTo("adopted", false).limit(5)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    progressBar.setVisibility(View.GONE);
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Log.d("Firebase", "Nu au fost găsite animale.");
+                        noneAnimalTextView.setVisibility(View.VISIBLE);
+                        return;
+                    }
 
-        query.get().addOnSuccessListener(queryDocumentSnapshots -> {
-            if(queryDocumentSnapshots.isEmpty()){
-                Log.d("Firebase", "Nu au fost găsite animale.");
-                progressBar.setVisibility(View.GONE);
-                noneAnimalTextView.setVisibility(View.VISIBLE);
-                return;
-            }
-
-            for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                Animal animal = document.toObject(Animal.class);
-                animal.setId(document.getId());
-                String favoriteTag = favoriteAnimalIds.contains(document.getId()) ? "favorite" : "not_favorite";
-                addAnimalCardToUI(animal, favoriteTag);
-            }
-            progressBar.setVisibility(View.GONE);
-            View itemView = LayoutInflater.from(this).inflate(R.layout.view_more, horizontalLinearLayout, false);
-            ImageButton imageButton = itemView.findViewById(R.id.imageButton);
-            imageButton.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, ListAnimalActivity.class);
-                startActivity(intent);
-            });
-            horizontalLinearLayout.addView(itemView);
-        }).addOnFailureListener(e -> {
-            Log.w("Firebase", "Error getting documents.", e);
-            Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
-            progressBar.setVisibility(View.GONE);
-        });
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Animal animal = document.toObject(Animal.class);
+                        animal.setId(document.getId());
+                        String favoriteTag = favoriteAnimalIds.contains(document.getId()) ? "favorite" : "not_favorite";
+                        addAnimalCardToUI(animal, favoriteTag);
+                    }
+                    View itemView = LayoutInflater.from(this).inflate(R.layout.view_more, horizontalLinearLayout, false);
+                    ImageButton imageButton = itemView.findViewById(R.id.imageButton);
+                    imageButton.setOnClickListener(v -> {
+                        Intent intent = new Intent(MainActivity.this, ListAnimalActivity.class);
+                        startActivity(intent);
+                    });
+                    horizontalLinearLayout.addView(itemView);
+                }).addOnFailureListener(e -> {
+                    Log.w("Firebase", "Error getting documents.", e);
+                    Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
+                });
     }
 
     private void addAnimalCardToUI(Animal animal, String favoriteTag) {
@@ -221,20 +224,17 @@ public class MainActivity extends AppCompatActivity {
         imageButtonFavorite.setTag(favoriteTag);
         if ("favorite".equals(imageButtonFavorite.getTag())) {
             imageButtonFavorite.setImageResource(R.drawable.ic_favorite_red);
-        }
-        else if("not_favorite".equals(imageButtonFavorite.getTag())) {
+        } else if ("not_favorite".equals(imageButtonFavorite.getTag())) {
             imageButtonFavorite.setImageResource(R.drawable.ic_favorite);
-        }
-        else {
+        } else {
             imageButtonFavorite.setVisibility(View.GONE);
         }
 
         imageButtonFavorite.setOnClickListener(v -> {
             if ("favorite".equals(imageButtonFavorite.getTag())) {
-                removeFromFavorite(imageButtonFavorite, animal.getId(), animal);
-            }
-            else {
-                addToFavorite(imageButtonFavorite, animal.getId(), animal);
+                removeFromFavorite(imageButtonFavorite, animal.getId());
+            } else {
+                addToFavorite(imageButtonFavorite, animal.getId());
             }
         });
 
@@ -248,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
         horizontalLinearLayout.addView(itemView);
     }
 
-    private void addToFavorite(ImageButton imageButtonFavorite, String documentId, Animal animal) {
+    private void addToFavorite(ImageButton imageButtonFavorite, String documentId) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             Log.e("Firestore", "Utilizatorul nu este autentificat.");
@@ -269,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void removeFromFavorite(ImageButton imageButtonFavorite, String documentId, Animal animal) {
+    private void removeFromFavorite(ImageButton imageButtonFavorite, String documentId) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
             Log.e("Firestore", "Utilizatorul nu este autentificat.");

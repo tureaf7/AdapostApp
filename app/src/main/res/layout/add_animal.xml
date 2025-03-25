@@ -15,10 +15,11 @@
 
         <ImageButton
             android:id="@+id/imageButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginBottom="10dp"
-            android:background="@android:drawable/ic_menu_add"/>
+            android:background="@drawable/ripple_custom"
+            android:src="@drawable/ic_plus" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

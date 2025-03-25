@@ -74,6 +74,10 @@
             android:exported="false">
         </activity>
         <activity
+            android:name=".AdoptionApplicationDetailsActivity"
+            android:exported="false">
+        </activity>
+        <activity
             android:name=".NotificationActivity"
             android:exported="false">
         </activity>

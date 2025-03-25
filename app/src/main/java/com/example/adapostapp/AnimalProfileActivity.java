@@ -20,6 +20,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FieldValue;
 
@@ -33,13 +34,15 @@ public class AnimalProfileActivity extends AppCompatActivity {
 
     private ImageView animalImage;
     private ImageButton backButton, favoriteButton;
-    private TextView animalName, arrivalDate, animalBreed, animalYears, animalMonth, animalColor, animalSex, animalDescription;
+    private TextView animalName, arrivalDate, animalBreed, animalYears, animalMonth, animalColor,
+            animalSex, animalDescription, statusApplication;
     private FirebaseAuth auth;
     private LinearLayout animalStatusLayout;
     private FirebaseUser user;
     private FirebaseFirestore db;
     private String animalId;
     private Button adoptButton;
+    private Animal animal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +63,7 @@ public class AnimalProfileActivity extends AppCompatActivity {
         favoriteButton = findViewById(R.id.favoriteButton);
         animalStatusLayout = findViewById(R.id.animalStatusLayout);
         adoptButton = findViewById(R.id.adoptButton);
+        statusApplication = findViewById(R.id.statusApplication);
 
         // Inițializare Firestore și FirebaseAuth
         auth = FirebaseAuth.getInstance();
@@ -71,8 +75,7 @@ public class AnimalProfileActivity extends AppCompatActivity {
 
         if (animalId != null) {
             // Popularea profilului animalului cu datele recuperate
-//            populateAnimalProfile(animal);
-            getAnimalDetails(animalId);
+            getAnimalDetails(animalId, user);
         } else {
             // Dacă nu a fost găsit niciun animal în Intent, afișează un mesaj sau o eroare
             animalName.setText("Animal necunoscut");
@@ -80,21 +83,12 @@ public class AnimalProfileActivity extends AppCompatActivity {
 
         // Adaugă logica pentru butonul "Back"
         backButton.setOnClickListener(v -> onBackPressed());
-        adoptButton.setOnClickListener(v -> {
-            if (user == null) {
-                startActivity(new Intent(AnimalProfileActivity.this, ProfileActivity.class));
-            } else {
-                Intent intent = new Intent(AnimalProfileActivity.this, AdoptionActivity.class);
-                intent.putExtra("animal", animalId);
-                startActivity(intent);
-            }
-        });
+    }
 
-        if (user == null) {
-            favoriteButton.setVisibility(View.GONE);
-        } else {
-            checkUserRole(user);
-        }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isApplicated(animalId);
     }
 
     private void checkUserRole(FirebaseUser user) {
@@ -109,7 +103,16 @@ public class AnimalProfileActivity extends AppCompatActivity {
                         intent.putExtra("animal", animalId);
                         startActivity(intent);
                     });
+                    adoptButton.setVisibility(View.VISIBLE);
+                    adoptButton.setText("Vezi cereri");
+                    adoptButton.setOnClickListener(v -> {
+                        Intent intent = new Intent(AnimalProfileActivity.this, AdoptionApplicationActivity.class);
+                        intent.putExtra("animal", animalId);
+                        startActivity(intent);
+                    });
                 } else {
+                    isApplicated(animalId);
+
                     isFavorite(animalId);
                     favoriteButton.setOnClickListener(v -> {
                         if ("favorite".equals(favoriteButton.getTag())) {
@@ -128,33 +131,62 @@ public class AnimalProfileActivity extends AppCompatActivity {
         });
     }
 
+
+    private void isApplicated(String animalId) {
+            db.collection("AdoptionApplications")
+                    .whereEqualTo("animalId", animalId)
+                    .whereEqualTo("userId", user.getUid())
+                    .get().addOnSuccessListener(queryDocumentSnapshots -> {
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            Log.d("Firebase", "Cererea de adopție a fost găsită.");
+                            // Procesare succes: documente găsite
+                            for (DocumentSnapshot document : queryDocumentSnapshots) {
+                                AdoptionApplication adoptionApplication = document.toObject(AdoptionApplication.class);
+                                statusApplication.setText("Cerera ta este: " + adoptionApplication.getStatus());
+                                statusApplication.setVisibility(View.VISIBLE);
+                                adoptButton.setVisibility(View.GONE);
+                            }
+                        } else {
+                            // Nu au fost găsite documente
+                            Log.d("Firebase", "Nu au fost găsite cereri de adopție pentru acest animal și utilizator.");
+                            adoptButton.setVisibility(View.VISIBLE);
+                            adoptButton.setOnClickListener(v -> {
+                                Intent intent = new Intent(AnimalProfileActivity.this, AdoptionActivity.class);
+                                intent.putExtra("animal", animalId);
+                                startActivity(intent);
+                            });
+                        }
+                    }).addOnFailureListener(e -> {
+                        Log.e("Firebase", "Eroare la verificarea cererii", e);
+                    });
+    }
+
+
     private void isFavorite(String animalId) {
         db.collection("users").document(user.getUid())
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     Log.d("User", user.getUid());
                     if (documentSnapshot.exists()) {
-                        if (documentSnapshot.exists()) {
-                            List<?> favoriteAnimalsRaw = (List<?>) documentSnapshot.get("favorites");
+                        List<?> favoriteAnimalsRaw = (List<?>) documentSnapshot.get("favorites");
 
-                            if (favoriteAnimalsRaw != null) {
-                                // Convertim lista de DocumentReference în lista de String-uri (ID-uri)
-                                List<String> favoriteAnimals = new ArrayList<>();
-                                for (Object obj : favoriteAnimalsRaw) {
-                                    if (obj instanceof DocumentReference) {
-                                        favoriteAnimals.add(((DocumentReference) obj).getId());
-                                    }
+                        if (favoriteAnimalsRaw != null) {
+                            // Convertim lista de DocumentReference în lista de String-uri (ID-uri)
+                            List<String> favoriteAnimals = new ArrayList<>();
+                            for (Object obj : favoriteAnimalsRaw) {
+                                if (obj instanceof DocumentReference) {
+                                    favoriteAnimals.add(((DocumentReference) obj).getId());
                                 }
-                                Log.d("Favorite", favoriteAnimals + "");
-                                if (favoriteAnimals != null && favoriteAnimals.contains(animalId)) {
-                                    Log.d("Firebase", "Animalul este favorit!");
-                                    favoriteButton.setTag("favorite");
-                                    favoriteButton.setImageResource(R.drawable.ic_favorite_red);
-                                } else {
-                                    Log.d("Firebase", "Animalul NU este favorit!");
-                                    favoriteButton.setTag("not_favorite");
-                                    favoriteButton.setImageResource(R.drawable.ic_favorite);
-                                }
+                            }
+                            Log.d("Favorite", favoriteAnimals + "");
+                            if (favoriteAnimals.contains(animalId)) {
+                                Log.d("Firebase", "Animalul este favorit!");
+                                favoriteButton.setTag("favorite");
+                                favoriteButton.setImageResource(R.drawable.ic_favorite_red);
+                            } else {
+                                Log.d("Firebase", "Animalul NU este favorit!");
+                                favoriteButton.setTag("not_favorite");
+                                favoriteButton.setImageResource(R.drawable.ic_favorite);
                             }
                         }
                     }
@@ -170,21 +202,25 @@ public class AnimalProfileActivity extends AppCompatActivity {
 
     }
 
-    private void getAnimalDetails(String animalId) {
+    private void getAnimalDetails(String animalId, FirebaseUser user) {
         db.collection("Animals")
                 .document(animalId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        Animal animal = documentSnapshot.toObject(Animal.class);
+                        animal = documentSnapshot.toObject(Animal.class);
                         if (animal != null) {
-                            Log.d("IsVaccinated", animal.isVaccinated() + "");
-                            Log.d("IsSterilized", animal.isSterilized() + "");
-                            if (animal.isVaccinated()) {
-                                statusAnimal("Vaccinat");
-                            }
-                            if (animal.isSterilized()) {
-                                statusAnimal("Sterilizat");
+                            if(animal.isAdopted()){
+                                statusApplication.setText("Animal adoptat");
+                            }else{
+                                if (user == null){
+                                    adoptButton.setVisibility(View.VISIBLE);
+                                    adoptButton.setOnClickListener(v -> {
+                                        startActivity(new Intent(AnimalProfileActivity.this, ProfileActivity.class));
+                                    });
+                                }else{
+                                    checkUserRole(user);
+                                }
                             }
                             populateAnimalProfile(animal);
                         }
@@ -213,9 +249,19 @@ public class AnimalProfileActivity extends AppCompatActivity {
         SimpleDateFormat dateFormat = new SimpleDateFormat("d MMM, yyyy", Locale.getDefault());
         arrivalDate.setText(dateFormat.format(animal.getArrivalDate().toDate()));
 
+        if (animal.isVaccinated()) {
+            statusAnimal("Vaccinat");
+        }
+        if (animal.isSterilized()) {
+            statusAnimal("Sterilizat");
+        }
+
         // Încarcă imaginea animalului folosind Glide
         Glide.with(this).load(animal.getPhoto()).into(animalImage);
 
+        if (animal.isAdopted()){
+            adoptButton.setVisibility(View.GONE);
+        }
 
     }
 

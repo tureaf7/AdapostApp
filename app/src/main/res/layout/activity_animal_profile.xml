@@ -70,11 +70,19 @@
 
                     <Button
                         android:id="@+id/adoptButton"
-                        android:layout_width="151dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:backgroundTint="#FFA726"
                         android:text="Adoptă"
-                        android:textColor="#FFFFFF" />
+                        android:textColor="#FFFFFF"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/statusApplication"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
+
                 </LinearLayout>
 
                 <LinearLayout

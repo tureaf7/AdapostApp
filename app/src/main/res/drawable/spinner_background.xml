@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Fundal spinner -->
+    <item>
+        <shape android:shape="rectangle">
+            <padding android:right="4dp"/>
+            <solid android:color="@android:color/white"/>
+            <corners android:radius="8dp"/>
+            <stroke android:width="2dp" android:color="#CCCCCC"/>
+        </shape>
+    </item>
+
+    <!-- Iconița de filtru -->
+    <item android:drawable="@drawable/ic_filter_list" android:gravity="end|center_vertical" />
+</layer-list>
