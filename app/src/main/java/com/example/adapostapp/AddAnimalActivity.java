@@ -159,6 +159,26 @@ public class AddAnimalActivity extends AppCompatActivity {
             dateTextView.setError("Introduceți data de sosire");
             return false;
         }
+        if (TextUtils.isEmpty(colorEditText.getText().toString())) {
+            colorEditText.setError("Introduceți culoarea animalului");
+            return false;
+        }
+        if (TextUtils.isEmpty(descriptionEditText.getText().toString())) {
+            descriptionEditText.setError("Introduceți descrierea animalului");
+            return false;
+        }
+        if (imageUri == null) {
+            Toast.makeText(this, "Selectați o imagine!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (getSelectedRadioText(speciesGroup).isEmpty()) {
+            Toast.makeText(this, "Selectați tipul animalului!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (getSelectedRadioText(genGroup).isEmpty()) {
+            Toast.makeText(this, "Selectați genul animalului!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
         return true;
     }
 

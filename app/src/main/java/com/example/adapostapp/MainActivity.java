@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,8 +34,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -52,7 +55,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView adoptInfoText, donatText, voluntarText, noneAnimalTextView;
     private FirebaseUser user;
     private static final int NOTIFICATION_PERMISSION_CODE = 101;
-    private static final String CHANNEL_ID = "adapost_notifications";
+    private static final String TAG = "MainActivity";
+    private static final String PREFS_NAME = "AdapostAppPrefs";
+    private static final String KEY_HAS_UNREAD_MESSAGES = "hasUnreadMessages";
+    private ListenerRegistration unreadMessagesListener;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +81,11 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
 
+        // Inițializează SharedPreferences
+        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
         notificationButton.setOnClickListener(v -> {
-            // TODO: Navigare către pagina de notificări
+            startActivity(new Intent(MainActivity.this, NotificationsActivity.class));
         });
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -86,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, FavoritesActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(MainActivity.this, MessagesActivity.class));
+                startActivity(new Intent(MainActivity.this, ChatListActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_animals) {
                 startActivity(new Intent(MainActivity.this, ListAnimalActivity.class));
@@ -98,13 +108,71 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
+        // Creează canalul de notificări
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "default_channel",
+                    "Default Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
+
+        updateMessagesIcon(sharedPreferences.getBoolean(KEY_HAS_UNREAD_MESSAGES, false));
+        loadChats();
+        handleNotificationIntent(getIntent());
         checkNotificationPermission();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        horizontalLinearLayout.removeAllViews();
         fetchAnimals();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleNotificationIntent(intent);
+    }
+
+    private void handleNotificationIntent(Intent intent) {
+        if (intent == null) {
+            Log.d(TAG, "Intent-ul este null.");
+            return;
+        }
+
+        Log.d(TAG, "Procesăm intent-ul: " + intent.toString());
+        Log.d(TAG, "Acțiune: " + intent.getAction());
+        if (intent.getExtras() != null) {
+            Log.d(TAG, "Extra-uri: " + intent.getExtras().toString());
+        } else {
+            Log.d(TAG, "Nu există extra-uri.");
+        }
+
+        // Verificăm dacă intent-ul provine dintr-o notificare
+        boolean fromNotification = intent.getBooleanExtra("from_notification", false);
+        String clickAction = intent.getStringExtra("click_action");
+        String chatId = intent.getStringExtra("chatId");
+        String otherUserId = intent.getStringExtra("otherUserId");
+
+        if (fromNotification || clickAction != null) {
+            Log.d(TAG, "Intent de notificare detectat: click_action=" + clickAction + ", chatId=" + chatId + ", otherUserId=" + otherUserId);
+
+            if ("CHAT_ACTIVITY".equals(clickAction) && chatId != null && otherUserId != null) {
+                Intent chatIntent = new Intent(this, ChatActivity.class);
+                chatIntent.putExtra("chatId", chatId);
+                chatIntent.putExtra("otherUserId", otherUserId);
+                startActivity(chatIntent);
+            } else {
+                Log.w(TAG, "Datele notificării sunt incomplete: click_action=" + clickAction + ", chatId=" + chatId + ", otherUserId=" + otherUserId);
+            }
+        } else {
+            Log.d(TAG, "Intent-ul nu provine dintr-o notificare (from_notification=false și click_action lipsă).");
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -320,28 +388,47 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == NOTIFICATION_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("Notificări", "Permisiune acordată!");
-                showTestNotification(); // Afișează notificarea după ce permisiunea a fost acordată
             } else {
                 Toast.makeText(this, "Permisiunea pentru notificări a fost refuzată!", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    private void showTestNotification() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Notificări Adăpost", NotificationManager.IMPORTANCE_DEFAULT);
-                notificationManager.createNotificationChannel(channel);
-            }
+    private void loadChats() {
+        unreadMessagesListener = db.collection("users")
+                .document(user.getUid())
+                .collection("chats")
+                .whereEqualTo("hasUnreadMessages", true)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        Log.w(TAG, "Eroare la ascultarea mesajelor necitite", error);
+                        Toast.makeText(this, "Eroare la preluarea conversațiilor!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle("Notificare Test")
-                    .setContentText("Aceasta este o notificare de test!")
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                    boolean hasUnreadMessages = snapshot != null && !snapshot.isEmpty();
+                    Log.d(TAG, hasUnreadMessages ? "Mesaje necitite detectate" : "Nu există mesaje necitite");
 
-            notificationManager.notify(1, builder.build());
+                    // Salvează starea în SharedPreferences
+                    sharedPreferences.edit()
+                            .putBoolean(KEY_HAS_UNREAD_MESSAGES, hasUnreadMessages)
+                            .apply();
+
+                    // Actualizează iconița
+                    updateMessagesIcon(hasUnreadMessages);
+                });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (unreadMessagesListener != null) {
+            unreadMessagesListener.remove();
         }
+    }
+
+    private void updateMessagesIcon(boolean hasUnreadMessages) {
+        int iconResId = hasUnreadMessages ? R.drawable.ic_message_red : R.drawable.ic_message;
+        bottomNavigationView.getMenu().findItem(R.id.navigation_messages).setIcon(iconResId);
     }
 }

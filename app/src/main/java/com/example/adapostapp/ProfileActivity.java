@@ -34,6 +34,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class ProfileActivity extends AppCompatActivity {
     private FirebaseAuth auth;
@@ -68,7 +69,7 @@ public class ProfileActivity extends AppCompatActivity {
                 startActivity(new Intent(ProfileActivity.this, FavoritesActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(ProfileActivity.this, MessagesActivity.class));
+                startActivity(new Intent(ProfileActivity.this, ChatListActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_animals) {
                 startActivity(new Intent(ProfileActivity.this, ListAnimalActivity.class));
@@ -289,6 +290,19 @@ public class ProfileActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = auth.getCurrentUser();
                         if (user != null) {
+                            // Obține și salvează token-ul FCM
+                            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
+                                if (tokenTask.isSuccessful()) {
+                                    String token = tokenTask.getResult();
+                                    db.collection("users")
+                                            .document(user.getUid())
+                                            .update("fcmToken", token)
+                                            .addOnSuccessListener(aVoid -> Log.d("FCM", "Token saved for user: " + user.getUid()))
+                                            .addOnFailureListener(e -> Log.w("FCM", "Error saving token", e));
+                                } else {
+                                    Log.w("FCM", "Fetching token failed", tokenTask.getException());
+                                }
+                            });
                             isUserExist(user);
                         }
                     } else {
@@ -324,31 +338,44 @@ public class ProfileActivity extends AppCompatActivity {
         db.collection("users").document(userId).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot document = task.getResult();
-                if (document.exists()) {
-                    checkUserRole(firebaseUser);
-                } else {
-                    if (account == null) {
-                        Log.e("Firestore", "GoogleSignInAccount este null!");
-                        return;
+                // Obține token-ul FCM
+                FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
+                    if (tokenTask.isSuccessful()) {
+                        String token = tokenTask.getResult();
+                        if (document.exists()) {
+                            // Utilizator existent: actualizează token-ul
+                            db.collection("users").document(userId)
+                                    .update("fcmToken", token)
+                                    .addOnSuccessListener(aVoid -> Log.d("FCM", "Token updated for existing user: " + userId))
+                                    .addOnFailureListener(e -> Log.w("FCM", "Error updating token", e));
+                            checkUserRole(firebaseUser);
+                        } else {
+                            // Utilizator nou: salvează datele inclusiv token-ul
+                            if (account == null) {
+                                Log.e("Firestore", "GoogleSignInAccount este null!");
+                                return;
+                            }
+                            String photoUrl = (account.getPhotoUrl() != null) ? account.getPhotoUrl().toString() : "";
+                            User user = new User(account.getDisplayName(), photoUrl, account.getEmail(), "user");
+                            user.setFcmToken(token); // Presupun că ai un setter în clasa User
+                            db.collection("users").document(userId).set(user)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("Firestore", "Utilizatorul a fost salvat în Firestore cu token!");
+                                        updateUserInfo("user", firebaseUser);
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("Firestore", "Eroare la salvarea utilizatorului", e);
+                                        Toast.makeText(this, "Eroare la salvarea utilizatorului!", Toast.LENGTH_SHORT).show();
+                                    });
+                        }
+                    } else {
+                        Log.w("FCM", "Fetching token failed", tokenTask.getException());
+                        // Continuă fără token dacă obținerea eșuează
+                        if (document.exists()) {
+                            checkUserRole(firebaseUser);
+                        }
                     }
-
-                    String photoUrl = (account.getPhotoUrl() != null) ? account.getPhotoUrl().toString() : "";
-                    User user = new User(account.getDisplayName(), photoUrl, account.getEmail(), "user");
-                    Log.d("Firestore", "User ID: " + userId);
-                    Log.d("Firestore", "User Name: " + account.getDisplayName());
-                    Log.d("Firestore", "User Email: " + account.getEmail());
-                    Log.d("Firestore", "User Photo URL: " + photoUrl);
-
-                    db.collection("users").document(userId).set(user)
-                            .addOnSuccessListener(aVoid -> {
-                                Log.d("Firestore", "Utilizatorul a fost salvat în Firestore!");
-                                updateUserInfo("user", firebaseUser); // Așteptăm să fie salvat înainte de actualizarea UI
-                            })
-                            .addOnFailureListener(e -> {
-                                Log.e("Firestore", "Eroare la salvarea utilizatorului", e);
-                                Toast.makeText(this, "Eroare la salvarea utilizatorului!", Toast.LENGTH_SHORT).show();
-                            });
-                }
+                });
             } else {
                 Log.e("Firestore", "Eroare la preluarea utilizatorului!", task.getException());
                 Toast.makeText(this, "Eroare la verificarea utilizatorului!", Toast.LENGTH_SHORT).show();
@@ -367,7 +394,7 @@ public class ProfileActivity extends AppCompatActivity {
             linearLayoutLogin.setVisibility(View.GONE);
             linearLayoutUser.setVisibility(View.VISIBLE);
             linearLayoutAdmin.setVisibility(View.GONE);
-            notificationLayout.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, NotificationActivity.class)));
+            notificationLayout.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, NotificationsActivity.class)));
             favoritesLayout.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, FavoritesActivity.class)));
         }
         if (isUserLoggedInWithGoogle(user)) { // Ascunde butonul de editare profil daca e GoogleAuth

@@ -51,7 +51,7 @@ public class FavoritesActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         gridLayout = findViewById(R.id.GridLayout);
         progressBar = findViewById(R.id.progressBar);
-        noneFavoriteTextView = findViewById(R.id.noneFavoriteTextView);
+        noneFavoriteTextView = findViewById(R.id.textViewEmpty);
         scrollView = findViewById(R.id.ScrollView);
 
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
@@ -65,7 +65,7 @@ public class FavoritesActivity extends AppCompatActivity {
             } else if (itemId == R.id.navigation_favorites) {
                 return true;
             } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(FavoritesActivity.this, MessagesActivity.class));
+                startActivity(new Intent(FavoritesActivity.this, ChatListActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_animals) {
                 startActivity(new Intent(FavoritesActivity.this, ListAnimalActivity.class));

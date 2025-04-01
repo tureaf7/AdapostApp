@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.example.adapostapp.utils.UserUtils;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -25,11 +26,18 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.WriteBatch;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.RemoteMessage;
+
+import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Calendar;
+import java.util.Map;
 
 public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
     private FirebaseAuth auth;
@@ -187,7 +195,7 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
             }
         } else {
             approveButton.setOnClickListener(v -> approveAdoption(adoptionApplication));
-            rejectButton.setOnClickListener(v -> rejectAdoption());
+            rejectButton.setOnClickListener(v -> rejectAdoption(adoptionApplication));
         }
 
         backButton.setOnClickListener(v -> onBackPressed());
@@ -200,6 +208,51 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
+        // Preia userId din AdoptionApplication
+        db.collection("AdoptionApplications")
+                .document(applicationId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        AdoptionApplication adoptionApplication = documentSnapshot.toObject(AdoptionApplication.class);
+                        String userId = adoptionApplication.getUserId();
+                        String adminId = firebaseUser.getUid();
+
+                        // Verifică dacă există deja o conversație între admin și utilizator
+                        db.collection("Chats")
+                                .whereArrayContains("participants", adminId)
+                                .whereArrayContains("participants", userId)
+                                .get()
+                                .addOnSuccessListener(queryDocumentSnapshots -> {
+                                    if (!queryDocumentSnapshots.isEmpty()) {
+                                        // Conversație existentă
+                                        Chat chat = queryDocumentSnapshots.getDocuments().get(0).toObject(Chat.class);
+                                        chat.setChatId(queryDocumentSnapshots.getDocuments().get(0).getId());
+                                        openChat(chat, userId);
+                                    } else {
+                                        // Creează o conversație nouă
+                                        String chatId = adminId + "_" + userId;
+                                        Chat newChat = new Chat(chatId, Arrays.asList(adminId, userId));
+                                        db.collection("Chats").document(chatId)
+                                                .set(newChat)
+                                                .addOnSuccessListener(aVoid -> openChat(newChat, userId))
+                                                .addOnFailureListener(e -> Toast.makeText(this, "Eroare la crearea conversației!", Toast.LENGTH_SHORT).show());
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(this, "Eroare la verificarea conversației!", Toast.LENGTH_SHORT).show();
+                                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: Chats",e);
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Eroare la preluarea detaliilor cererii!", Toast.LENGTH_SHORT).show());
+    }
+
+    private void openChat(Chat chat, String otherUserId) {
+        Intent intent = new Intent(this, ChatActivity.class);
+        intent.putExtra("chatId", chat.getChatId());
+        intent.putExtra("otherUserId", otherUserId);
+        startActivity(intent);
     }
 
     private void sendEmail() {
@@ -239,13 +292,14 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void rejectAdoption() {
+    private void rejectAdoption(AdoptionApplication adoptionApplication) {
         db.collection("AdoptionApplications")
                 .document(applicationId)
                 .update("status", "Respins", "adminId", firebaseUser.getUid(),
                         "details", "Cererea a fost respinsa!", "dateAnswer", Calendar.getInstance().getTime())
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Cererea a fost respinsa!", Toast.LENGTH_SHORT).show();
+//                    sendNotificationToUser(adoptionApplication.getUserId(), "Cererea ta a fost respinsa!");
                     onBackPressed();
                 }).addOnFailureListener(e -> {
                     Toast.makeText(this, "Eroare la gestionarea cererii!", Toast.LENGTH_SHORT).show();
@@ -255,16 +309,15 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
     private void approveAdoption(AdoptionApplication adoptionApplication) {
         WriteBatch batch = db.batch();
 
-        // Actualizarea cererii de adopție
+        // Pasul 1: Actualizează cererea curentă și animalul
         DocumentReference applicationRef = db.collection("AdoptionApplications").document(applicationId);
         batch.update(applicationRef, "status", "Aprobat", "adminId", firebaseUser.getUid(),
                 "details", "Cererea a fost acceptata!", "dateAnswer", Calendar.getInstance().getTime());
 
-        // Actualizarea animalului
         DocumentReference animalRef = db.collection("Animals").document(adoptionApplication.getAnimalId());
         batch.update(animalRef, "adopted", true);
 
-        // Eliminarea din favorite
+        // Elimină din favorite
         db.collection("users")
                 .whereArrayContains("favorites", animalRef)
                 .get()
@@ -274,36 +327,62 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
                         batch.update(userRef, "favorites", FieldValue.arrayRemove(animalRef));
                     }
 
-                    // Respingerea celorlalte cereri de adopție pentru același animal
-                    db.collection("AdoptionApplications")
-                            .whereEqualTo("animalId", adoptionApplication.getAnimalId())
-                            .whereNotEqualTo("status", "Aprobat") // Asigură-te că respingi doar cererile care nu au fost deja aprobate
-                            .get()
-                            .addOnSuccessListener(queryDocumentSnapshots2 -> {
-                                for (QueryDocumentSnapshot document : queryDocumentSnapshots2) {
-                                    DocumentReference applicationsRef = document.getReference();
-                                    batch.update(applicationsRef, "status", "Respins", "adminId",
-                                            firebaseUser.getUid(), "details", "Cererea a fost respinsa!",
-                                            "dateAnswer", Calendar.getInstance().getTime());
-                                }
-
-                                // Execută toate operațiunile într-o singură tranzacție
-                                batch.commit()
-                                        .addOnSuccessListener(aVoid -> {
-                                            Toast.makeText(this, "Cererea a fost acceptata si animalul adoptat!", Toast.LENGTH_SHORT).show();
-                                            onBackPressed();
-                                        })
-                                        .addOnFailureListener(e -> {
-                                            Toast.makeText(this, "Eroare la gestionarea cererii!", Toast.LENGTH_SHORT).show();
-                                        });
+                    // Comite primul batch (aprobare + animal + favorite)
+                    batch.commit()
+                            .addOnSuccessListener(aVoid -> {// Trimite notificare utilizatorului
+//                                String applicationAproved = "Cererea ta de adopție a fost aprobată!";
+//                                sendNotificationToUser(adoptionApplication.getUserId(), applicationAproved);
+                                // Pasul 2: După ce aprobarea e confirmată, respinge celelalte cereri
+                                rejectOtherApplications(adoptionApplication.getAnimalId());
                             })
                             .addOnFailureListener(e -> {
-                                Toast.makeText(this, "Eroare la respingerea celorlalte cereri de adopție!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this, "Eroare la aprobarea cererii!", Toast.LENGTH_SHORT).show();
                             });
-
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Eroare la eliminarea din favorite!", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void sendNotificationToUser(String userId, String message) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("userId", userId);
+        notification.put("message", message);
+        notification.put("timestamp", new Timestamp(new Date()));
+
+        db.collection("Notifications")
+                .add(notification)
+                .addOnSuccessListener(documentReference -> Log.d("Firebase", "Notificare salvată"))
+                .addOnFailureListener(e -> Log.w("Firebase", "Eroare la salvarea notificării", e));
+    }
+
+
+    private void rejectOtherApplications(String animalId) {
+        WriteBatch rejectBatch = db.batch();
+
+        db.collection("AdoptionApplications")
+                .whereEqualTo("animalId", animalId)
+                .whereNotEqualTo("status", "Aprobat") // Exclude cererea aprobată
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        DocumentReference applicationsRef = document.getReference();
+                        rejectBatch.update(applicationsRef, "status", "Respins", "adminId", firebaseUser.getUid(),
+                                "details", "Cererea a fost respinsa!", "dateAnswer", Calendar.getInstance().getTime());
+                    }
+
+                    rejectBatch.commit()
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(this, "Cererea a fost acceptată și celelalte respinse!", Toast.LENGTH_SHORT).show();
+                                onBackPressed();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(this, "Eroare la respingerea celorlalte cereri!", Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Eroare la procesarea cererilor!", Toast.LENGTH_SHORT).show();
                 });
     }
 

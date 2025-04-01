@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -59,7 +58,7 @@ public class AdoptionApplicationActivity extends AppCompatActivity {
         buttonBackToMain = findViewById(R.id.buttonBackToMain);
         progressBar = findViewById(R.id.progressBar);
         linearLayout = findViewById(R.id.linearLayout);
-        noneFavoriteTextView = findViewById(R.id.noneFavoriteTextView);
+        noneFavoriteTextView = findViewById(R.id.textViewEmpty);
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setSelectedItemId(R.id.navigation_profile);
@@ -72,12 +71,13 @@ public class AdoptionApplicationActivity extends AppCompatActivity {
                 startActivity(new Intent(this, FavoritesActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(this, MessagesActivity.class));
+                startActivity(new Intent(this, ChatListActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_animals) {
                 startActivity(new Intent(this, ListAnimalActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
                 return true;
             }
             return false;

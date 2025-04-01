@@ -5,13 +5,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class User {
-    private String id;
-    private String name;
-    private String profileImageUrl;
-    private String email; // Add email
-    private String role;
+    private String id, name, profileImageUrl, email, role, fcmToken;
 
-    public User() {} // Important constructor
+    public User() {
+    } // Important constructor
 
     public User(String name, String profileImageUrl, String email, String role) {
         this.name = name;
@@ -28,11 +25,19 @@ public class User {
         this.role = role;
     }
 
-    public String getId(){
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(String id){
+    public void setId(String id) {
         this.id = id;
     }
 

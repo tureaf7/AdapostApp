@@ -84,7 +84,7 @@ public class EditProfileActivity extends AppCompatActivity {
                         }
                     }
                 }).addOnFailureListener(e -> {
-                    Log.e("Firestore", "Eroare la obținerea detaliilor animalului:");
+                    Log.e("Firestore", "Eroare la obținerea detaliilor utilizatorului:");
                 });
     }
 

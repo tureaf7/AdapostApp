@@ -26,7 +26,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
@@ -52,7 +51,7 @@ public class ListAnimalActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         gridLayout = findViewById(R.id.GridLayout);
         linearLayout = findViewById(R.id.linearLayout);
-        noneFavoriteTextView = findViewById(R.id.noneFavoriteTextView);
+        noneFavoriteTextView = findViewById(R.id.textViewEmpty);
         progressBar = findViewById(R.id.progressBar);
 
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
@@ -67,7 +66,7 @@ public class ListAnimalActivity extends AppCompatActivity {
                 startActivity(new Intent(ListAnimalActivity.this, FavoritesActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(ListAnimalActivity.this, MessagesActivity.class));
+                startActivity(new Intent(ListAnimalActivity.this, ChatListActivity.class));
                 return true;
             } else if (itemId == R.id.navigation_animals) {
                 return true;
@@ -81,57 +80,61 @@ public class ListAnimalActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
-        readAnimalsFromDB();
+        if (user == null) {
+            readAnimalsFromDB("user");
+        }else{
+            checkUserRole();
+        }
     }
 
-    private void readAnimalsFromDB() {
+    private void checkUserRole() {
         progressBar.setVisibility(View.VISIBLE);
         UserUtils.checkUserRole(user, new UserUtils.UserRoleCallback() {
             @Override
             public void onRoleRetrieved(String role) {
-
-                db.collection("Animals")
-                        .get()
-                        .addOnSuccessListener(queryDocumentSnapshots -> {
-                            if (queryDocumentSnapshots.isEmpty()) {
-                                Log.d("Firebase", "Nu au fost găsite animale.");
-                                noneFavoriteTextView.setVisibility(View.VISIBLE);
-                            } else {
-                                gridLayout.removeAllViews();
-                                linearLayout.removeAllViews();
-
-                                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                                    Animal animal = document.toObject(Animal.class);
-                                    if ("admin".equals(role)) {
-                                        addCardToUIAdmin(animal);
-                                    } else {
-                                        if (!animal.isAdopted()) {
-                                            addAnimalCardToUI(animal);
-                                        }
-                                    }
-                                }
-
-                            }
-                            // Adăugăm butonul doar dacă utilizatorul este admin
-                            if ("admin".equals(role)) {
-                                View itemView = LayoutInflater.from(ListAnimalActivity.this)
-                                        .inflate(R.layout.add_animal, linearLayout, false);
-
-                                itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
-                                    Intent intent = new Intent(ListAnimalActivity.this, AddAnimalActivity.class);
-                                    startActivity(intent);
-                                });
-                                Log.d("Firebase", "Utilizatorul este admin. Se afișează butonul de adăugare.");
-                                linearLayout.addView(itemView);
-                            }
-                            progressBar.setVisibility(View.GONE);
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.w("Firebase", "Eroare la preluarea datelor", e);
-                            Toast.makeText(ListAnimalActivity.this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
-                            noneFavoriteTextView.setVisibility(View.VISIBLE);
-                            progressBar.setVisibility(View.GONE);
-                        });
+                readAnimalsFromDB(role);
+//                db.collection("Animals")
+//                        .get()
+//                        .addOnSuccessListener(queryDocumentSnapshots -> {
+//                            if (queryDocumentSnapshots.isEmpty()) {
+//                                Log.d("Firebase", "Nu au fost găsite animale.");
+//                                noneFavoriteTextView.setVisibility(View.VISIBLE);
+//                            } else {
+//                                gridLayout.removeAllViews();
+//                                linearLayout.removeAllViews();
+//
+//                                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+//                                    Animal animal = document.toObject(Animal.class);
+//                                    if ("admin".equals(role)) {
+//                                        addCardToUIAdmin(animal);
+//                                    } else {
+//                                        if (!animal.isAdopted()) {
+//                                            addAnimalCardToUI(animal);
+//                                        }
+//                                    }
+//                                }
+//
+//                            }
+//                            // Adăugăm butonul doar dacă utilizatorul este admin
+//                            if ("admin".equals(role)) {
+//                                View itemView = LayoutInflater.from(ListAnimalActivity.this)
+//                                        .inflate(R.layout.add_animal, linearLayout, false);
+//
+//                                itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
+//                                    Intent intent = new Intent(ListAnimalActivity.this, AddAnimalActivity.class);
+//                                    startActivity(intent);
+//                                });
+//                                Log.d("Firebase", "Utilizatorul este admin. Se afișează butonul de adăugare.");
+//                                linearLayout.addView(itemView);
+//                            }
+//                            progressBar.setVisibility(View.GONE);
+//                        })
+//                        .addOnFailureListener(e -> {
+//                            Log.w("Firebase", "Eroare la preluarea datelor", e);
+//                            Toast.makeText(ListAnimalActivity.this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
+//                            noneFavoriteTextView.setVisibility(View.VISIBLE);
+//                            progressBar.setVisibility(View.GONE);
+//                        });
             }
 
             @Override
@@ -140,6 +143,51 @@ public class ListAnimalActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void readAnimalsFromDB(String role) {
+        db.collection("Animals")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Log.d("Firebase", "Nu au fost găsite animale.");
+                        noneFavoriteTextView.setVisibility(View.VISIBLE);
+                    } else {
+                        gridLayout.removeAllViews();
+                        linearLayout.removeAllViews();
+
+                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                            Animal animal = document.toObject(Animal.class);
+                            if ("admin".equals(role)) {
+                                addCardToUIAdmin(animal);
+                            } else {
+                                if (!animal.isAdopted()) {
+                                    addAnimalCardToUI(animal);
+                                }
+                            }
+                        }
+
+                    }
+                    // Adăugăm butonul doar dacă utilizatorul este admin
+                    if ("admin".equals(role)) {
+                        View itemView = LayoutInflater.from(ListAnimalActivity.this)
+                                .inflate(R.layout.add_animal, linearLayout, false);
+
+                        itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
+                            Intent intent = new Intent(ListAnimalActivity.this, AddAnimalActivity.class);
+                            startActivity(intent);
+                        });
+                        Log.d("Firebase", "Utilizatorul este admin. Se afișează butonul de adăugare.");
+                        linearLayout.addView(itemView);
+                    }
+                    progressBar.setVisibility(View.GONE);
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("Firebase", "Eroare la preluarea datelor", e);
+                    Toast.makeText(ListAnimalActivity.this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
+                    noneFavoriteTextView.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.GONE);
+                });
     }
 
 
@@ -250,7 +298,7 @@ public class ListAnimalActivity extends AppCompatActivity {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String imageUrl = documentSnapshot.getString("photo");
-                        Log.d("Firebase", "URL-ul imaginii: " + imageUrl); // Afișează URL-ul imaginii în Logcat")
+                        Log.d("Firebase", "URL-ul imaginii: " + imageUrl); // Afișează URL-ul imaginii în Logcat
                         if (imageUrl != null && !imageUrl.isEmpty()) {
                             // Extragem numele fișierului din URL
                             Uri uri = Uri.parse(imageUrl);
@@ -292,22 +340,41 @@ public class ListAnimalActivity extends AppCompatActivity {
                     batch.commit()
                             .addOnSuccessListener(aVoid -> {
                                 Log.d("Firebase", "Animalul a fost eliminat din favorite.");
-                                deleteAnimalFromFirestore(animalId); // După ce eliminăm din favorite, ștergem documentul
+                                deleteAnimalAndApplications(animalId); // După ce eliminăm din favorite, ștergem animalul și cererile de adopție
                             })
                             .addOnFailureListener(e -> Log.w("Firebase", "Eroare la actualizarea listei de favorite.", e));
                 })
                 .addOnFailureListener(e -> Log.w("Firebase", "Eroare la căutarea utilizatorilor.", e));
     }
 
-    private void deleteAnimalFromFirestore(String animalId) {
+    private void deleteAnimalAndApplications(String animalId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("Animals").document(animalId)
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    readAnimalsFromDB();
-                    Log.d("Firebase", "Animalul a fost șters din Firestore.");
+        WriteBatch batch = db.batch();
+
+        // Referința către documentul animalului
+        DocumentReference animalRef = db.collection("Animals").document(animalId);
+        batch.delete(animalRef);
+
+        // Găsirea și ștergerea cererilor de adopție asociate
+        db.collection("AdoptionApplications")
+                .whereEqualTo("animalId", animalId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        DocumentReference applicationRef = document.getReference();
+                        batch.delete(applicationRef);
+                    }
+
+                    // Execută batch-ul pentru a șterge atât animalul, cât și cererile de adopție
+                    batch.commit()
+                            .addOnSuccessListener(aVoid -> {
+                                readAnimalsFromDB("admin"); // Actualizează UI-ul după ștergere
+                                Log.d("Firebase", "Animalul și cererile de adopție au fost șterse din Firestore.");
+                            })
+                            .addOnFailureListener(e -> Log.w("Firebase", "Eroare la ștergerea datelor.", e));
                 })
-                .addOnFailureListener(e -> Log.w("Firebase", "Eroare la ștergerea animalului.", e));
+                .addOnFailureListener(e -> Log.w("Firebase", "Eroare la preluarea cererilor de adopție.", e));
     }
+
 
 }

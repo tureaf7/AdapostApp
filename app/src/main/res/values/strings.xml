@@ -27,4 +27,5 @@
     <string name="mesaj_adapost">Optional: Un mesaj către adăpost</string>
     <string name="grija_animal">Cine va avea grijă de animal zilnic?</string>
     <string name="animale_precedente">Dacă Da: ce animale și pentru cât timp?</string>
+    <string name="default_notification_channel_id">default_notification_channel</string>
 </resources>

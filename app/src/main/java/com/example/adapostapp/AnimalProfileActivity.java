@@ -103,8 +103,8 @@ public class AnimalProfileActivity extends AppCompatActivity {
                         intent.putExtra("animal", animalId);
                         startActivity(intent);
                     });
-                    adoptButton.setVisibility(View.VISIBLE);
                     adoptButton.setText("Vezi cereri");
+                    adoptButton.setVisibility(View.VISIBLE);
                     adoptButton.setOnClickListener(v -> {
                         Intent intent = new Intent(AnimalProfileActivity.this, AdoptionApplicationActivity.class);
                         intent.putExtra("animal", animalId);
@@ -212,6 +212,7 @@ public class AnimalProfileActivity extends AppCompatActivity {
                         if (animal != null) {
                             if(animal.isAdopted()){
                                 statusApplication.setText("Animal adoptat");
+                                checkUserRole(user);
                             }else{
                                 if (user == null){
                                     adoptButton.setVisibility(View.VISIBLE);

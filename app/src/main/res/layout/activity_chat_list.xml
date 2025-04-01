@@ -1,18 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
-
-    <!-- Textul sus -->
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/linearLayout3"
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
@@ -35,7 +31,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Favorite"
+            android:text="Conversatii"
             android:textSize="20sp" />
 
         <Space
@@ -45,49 +41,53 @@
 
     </LinearLayout>
 
-    <ScrollView
-        android:id="@+id/ScrollView"
+    <AutoCompleteTextView
+        android:id="@+id/searchAutoComplete"
+        style="@style/EditTextField"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linearLayout"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/search_background"
+        android:backgroundTint="#FFFFFF"
+        android:elevation="1dp"
+        android:dropDownHeight="wrap_content"
+        android:dropDownWidth="wrap_content"
+        android:hint="Căutați utilizatori"
+        android:padding="16dp" />
 
-        android:layout_above="@+id/bottomNavigationView"
-        android:layout_below="@+id/linearLayout3"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        tools:ignore="SpeakableTextPresentCheck">
-
-        <androidx.gridlayout.widget.GridLayout
-            android:id="@+id/GridLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            app:columnCount="2">
-            <!-- Cardurile tale vor fi adăugate aici din codul Java -->
-
-        </androidx.gridlayout.widget.GridLayout>
-
-
-    </ScrollView>
 
     <TextView
         android:id="@+id/textViewEmpty"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="200dp"
         android:gravity="center"
-        android:text="Lista de favorite este goala"
+        android:text="Nici o conversatie"
         android:textColor="#525252"
         android:textSize="20sp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        tools:visibility="visible" />
 
     <ProgressBar
         android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp" />
+        android:layout_centerInParent="true"
+        android:visibility="visible"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewChatList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottomNavigationView"
+        android:layout_below="@+id/searchAutoComplete"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
@@ -95,14 +95,12 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="0dp"
         android:background="@color/whiteDark"
+        app:itemIconSize="28dp"
         app:itemIconTint="@color/cardview_dark_background"
         app:itemTextColor="@color/cardview_dark_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:itemIconSize="28dp"
         app:menu="@menu/bottom_navigation_menu" />
-
 </RelativeLayout>
