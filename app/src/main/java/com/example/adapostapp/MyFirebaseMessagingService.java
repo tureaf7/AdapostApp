@@ -7,7 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
+
 import androidx.core.app.NotificationCompat;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -18,6 +20,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String CHANNEL_ID_CHAT = "ChatNotifications";
     private static final String CHANNEL_ID_ADOPTION = "AdoptionNotifications";
     private static final String CHANNEL_ID_ADMIN = "AdminNotifications";
+    private static final String CHANNEL_ID_VOLUNTEER = "VolunteerNotifications";
+    private static final String CHANNEL_ID_VOLUNTEER_REQUEST = "VolunteerRequestNotifications"; // Separat pentru cereri noi
     private static int notificationIdCounter = 0;
 
     @Override
@@ -26,34 +30,54 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Log.d(TAG, "Notificare primită: " + remoteMessage.getData());
 
+        // Preia titlul și corpul din notificare sau date
         String title = remoteMessage.getNotification() != null ? remoteMessage.getNotification().getTitle() : remoteMessage.getData().get("title");
         String body = remoteMessage.getNotification() != null ? remoteMessage.getNotification().getBody() : remoteMessage.getData().get("body");
         String clickAction = remoteMessage.getData().get("click_action");
         String chatId = remoteMessage.getData().get("chatId");
         String otherUserId = remoteMessage.getData().get("otherUserId");
         String applicationId = remoteMessage.getData().get("applicationId");
+        String requestId = remoteMessage.getData().get("requestId");
 
         if (title == null || body == null) {
             Log.w(TAG, "Titlul sau corpul notificării este null. Ignorăm notificarea.");
             return;
         }
 
+        // Determină canalul de notificare în funcție de tipul notificării
         String channelId;
         String channelName;
-        if ("CHAT_ACTIVITY".equals(clickAction)) {
-            channelId = CHANNEL_ID_CHAT;
-            channelName = "Chat Notifications";
-        } else if ("APPROVAL_ACTIVITY".equals(clickAction) || "REJECTION_ACTIVITY".equals(clickAction)) {
-            channelId = CHANNEL_ID_ADOPTION;
-            channelName = "Adoption Updates";
-        } else if ("NEW_APPLICATION_ACTIVITY".equals(clickAction)) {
-            channelId = CHANNEL_ID_ADMIN;
-            channelName = "Admin Notifications";
-        } else {
-            channelId = CHANNEL_ID_ADOPTION;
-            channelName = "Adoption Updates";
+        switch (clickAction) {
+            case "CHAT_ACTIVITY":
+                channelId = CHANNEL_ID_CHAT;
+                channelName = "Chat Notifications";
+                break;
+            case "APPROVAL_ACTIVITY":
+            case "REJECTION_ACTIVITY":
+                channelId = CHANNEL_ID_ADOPTION;
+                channelName = "Adoption Updates";
+                break;
+            case "NEW_APPLICATION_ACTIVITY":
+                channelId = CHANNEL_ID_ADMIN;
+                channelName = "Admin Notifications";
+                break;
+            case "VOLUNTEER_APPROVAL_ACTIVITY":
+            case "VOLUNTEER_REJECTION_ACTIVITY":
+                channelId = CHANNEL_ID_VOLUNTEER;
+                channelName = "Volunteer Updates";
+                break;
+            case "NEW_VOLUNTEER_REQUEST_ACTIVITY":
+                channelId = CHANNEL_ID_VOLUNTEER_REQUEST;
+                channelName = "Volunteer Request Notifications";
+                break;
+            default:
+                channelId = CHANNEL_ID_VOLUNTEER;
+                channelName = "Volunteer Notifications";
+                Log.w(TAG, "click_action necunoscut: " + clickAction + ". Folosim canalul implicit.");
+                break;
         }
 
+        // Configurează canalul de notificare (pentru Android O și mai nou)
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -64,59 +88,77 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             notificationManager.createNotificationChannel(channel);
         }
 
+        // Construiește notificarea
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(body)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
+        // Configurează intent-ul în funcție de click_action
         if (clickAction != null) {
             Intent intent;
-            if ("CHAT_ACTIVITY".equals(clickAction)) {
-                if (chatId == null || otherUserId == null) {
-                    Log.w(TAG, "chatId sau otherUserId lipsesc pentru CHAT_ACTIVITY. Redirecționăm către MainActivity.");
+            switch (clickAction) {
+                case "CHAT_ACTIVITY":
+                    if (chatId == null || otherUserId == null) {
+                        Log.w(TAG, "chatId sau otherUserId lipsesc pentru CHAT_ACTIVITY.");
+                        intent = new Intent(this, MainActivity.class);
+                    } else {
+                        intent = new Intent(this, ChatActivity.class); // Deschide direct ChatActivity
+                        intent.putExtra("chatId", chatId);
+                        intent.putExtra("otherUserId", otherUserId);
+                    }
+                    break;
+                case "APPROVAL_ACTIVITY":
+                case "REJECTION_ACTIVITY":
+                    intent = new Intent(this, AdoptionApplicationDetailsActivity.class); // Presupunem o activitate pentru adopții
+                    if (applicationId != null) {
+                        intent.putExtra("applicationId", applicationId);
+                    }
+                    break;
+                case "NEW_APPLICATION_ACTIVITY":
+                    intent = new Intent(this, AdoptionApplicationDetailsActivity.class); // Lista cererilor pentru admini
+                    if (applicationId != null) {
+                        intent.putExtra("applicationId", applicationId);
+                    }
+                    break;
+                case "VOLUNTEER_APPROVAL_ACTIVITY":
+                case "VOLUNTEER_REJECTION_ACTIVITY":
+                    intent = new Intent(this, ApplicationsListActivity.class); // Lista cererilor de voluntariat
+                    if (applicationId != null) {
+                        intent.putExtra("volunteerApplication", applicationId);
+                    }
+                    break;
+                case "NEW_VOLUNTEER_REQUEST_ACTIVITY":
+                    intent = new Intent(this, ApplicationsListActivity.class); // Deschide lista cererilor noi
+                    if (requestId != null) {
+                        intent.putExtra("volunteerApplication", requestId);
+                    }
+                    break;
+                default:
+                    Log.w(TAG, "click_action necunoscut: " + clickAction + ". Redirecționăm către MainActivity.");
                     intent = new Intent(this, MainActivity.class);
-                } else {
-                    intent = new Intent(this, MainActivity.class);
-                    intent.setAction("OPEN_CHAT_FROM_NOTIFICATION");
-                    intent.putExtra("click_action", clickAction);
-                    intent.putExtra("chatId", chatId);
-                    intent.putExtra("otherUserId", otherUserId);
-                    intent.putExtra("from_notification", true);
-                }
-            } else if ("APPROVAL_ACTIVITY".equals(clickAction) || "REJECTION_ACTIVITY".equals(clickAction)) {
-                intent = new Intent(this, MainActivity.class);
-                intent.putExtra("click_action", clickAction);
-                intent.putExtra("from_notification", true);
-            } else if ("NEW_APPLICATION_ACTIVITY".equals(clickAction)) {
-                intent = new Intent(this, MainActivity.class);
-                intent.putExtra("click_action", clickAction);
-                if (applicationId != null) {
-                    intent.putExtra("applicationId", applicationId);
-                }
-                intent.putExtra("from_notification", true);
-            } else {
-                Log.w(TAG, "click_action necunoscut: " + clickAction + ". Redirecționăm către MainActivity.");
-                intent = new Intent(this, MainActivity.class);
-                intent.putExtra("from_notification", true);
+                    break;
             }
 
-            // Loghează intent-ul creat
-            Log.d(TAG, "Intent creat pentru PendingIntent: " + intent.toString());
-            Log.d(TAG, "Acțiune: " + intent.getAction());
-            Log.d(TAG, "Extra-uri: " + intent.getExtras());
-
-            // Folosim FLAG_ACTIVITY_NEW_TASK pentru a lansa aplicația dacă este închisă
+            // Adaugă flag-uri pentru a gestiona stiva de activități
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+            // Creează PendingIntent
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     this,
-                    0,
+                    notificationIdCounter, // Folosește un ID unic pentru fiecare notificare
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
             builder.setContentIntent(pendingIntent);
+
+            // Loghează detalii pentru debugging
+            Log.d(TAG, "Intent creat: " + intent + ", Extras: " + intent.getExtras());
         }
 
+        // Afișează notificarea
         notificationManager.notify(notificationIdCounter++, builder.build());
     }
 

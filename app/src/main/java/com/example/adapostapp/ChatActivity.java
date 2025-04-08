@@ -1,12 +1,9 @@
 package com.example.adapostapp;
 
-
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,8 +35,9 @@ public class ChatActivity extends AppCompatActivity {
     private List<Message> messages;
     private FirebaseFirestore db;
     private TextView nameTextView;
-    private String chatId, otherUserId, currentUserId, photoUrl;
-    private ListenerRegistration messagesListener;
+    private String chatId, otherUserId, currentUserId;
+    private ListenerRegistration messagesListener; // Pentru markMessagesAsRead
+    private ListenerRegistration loadMessagesListener; // Pentru loadMessages
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +60,7 @@ public class ChatActivity extends AppCompatActivity {
         chatId = getIntent().getStringExtra("chatId");
         otherUserId = getIntent().getStringExtra("otherUserId");
         Log.d("ChatActivity", "Other user ID: " + otherUserId);
+
         loadOtherUser(otherUserId);
         if (chatId != null) {
             loadMessages();
@@ -90,10 +89,12 @@ public class ChatActivity extends AppCompatActivity {
                         User otherUser = documentSnapshot.toObject(User.class);
                         if (otherUser != null) {
                             nameTextView.setText(otherUser.getName());
-                            Glide.with(this)
-                                    .load(otherUser.getProfileImageUrl())
-                                    .error(R.drawable.ic_profile)
-                                    .into(imageViewProfile);
+                            if (!isFinishing() && !isDestroyed()) {
+                                Glide.with(this)
+                                        .load(otherUser.getProfileImageUrl())
+                                        .error(R.drawable.ic_profile)
+                                        .into(imageViewProfile);
+                            }
                             Log.d("ChatActivity", "Other user name: " + otherUser.getName());
                             Log.d("ChatActivity", "Other user profile image URL: " + otherUser.getProfileImageUrl());
                         } else {
@@ -104,11 +105,10 @@ public class ChatActivity extends AppCompatActivity {
                     Log.e("ChatActivity", "Eroare la preluarea utilizatorului!", e);
                     Toast.makeText(this, "Eroare la preluarea utilizatorului!", Toast.LENGTH_SHORT).show();
                 });
-
     }
 
     private void loadMessages() {
-        db.collection("Chats").document(chatId)
+        loadMessagesListener = db.collection("Chats").document(chatId)
                 .collection("Messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
                 .addSnapshotListener((queryDocumentSnapshots, e) -> {
@@ -117,22 +117,23 @@ public class ChatActivity extends AppCompatActivity {
                         return;
                     }
                     messages.clear();
-                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                        Message message = doc.toObject(Message.class);
-                        messages.add(message);
+                    if (queryDocumentSnapshots != null) {
+                        for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                            Message message = doc.toObject(Message.class);
+                            messages.add(message);
+                        }
+                        messageAdapter.notifyDataSetChanged();
+                        recyclerViewMessages.scrollToPosition(messages.size() - 1);
                     }
-                    messageAdapter.notifyDataSetChanged();
-                    recyclerViewMessages.scrollToPosition(messages.size() - 1);
                 });
     }
 
     private void markMessagesAsRead() {
-        // Monitorizează mesajele necitite din acest chat în timp real
         messagesListener = db.collection("Chats")
                 .document(chatId)
                 .collection("Messages")
                 .whereEqualTo("receiverId", currentUserId)
-                .whereEqualTo("isRead", false)
+                .whereEqualTo("read", false)
                 .addSnapshotListener((snapshot, error) -> {
                     if (error != null) {
                         Log.w(TAG, "Eroare la ascultarea mesajelor necitite", error);
@@ -140,17 +141,13 @@ public class ChatActivity extends AppCompatActivity {
                     }
 
                     if (snapshot != null) {
-                        // Procesează mesajele necitite
                         for (QueryDocumentSnapshot document : snapshot) {
-                            // Marchează mesajul ca citit
-                            document.getReference().update("isRead", true)
+                            document.getReference().update("read", true)
                                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Mesaj marcat ca citit: " + document.getId()))
                                     .addOnFailureListener(e -> Log.w(TAG, "Eroare la marcarea mesajului ca citit", e));
                         }
 
-                        // Verifică dacă mai există mesaje necitite
                         if (snapshot.isEmpty()) {
-                            // Nu mai există mesaje necitite, actualizează users/{userId}/chats
                             db.collection("users")
                                     .document(currentUserId)
                                     .collection("chats")
@@ -164,11 +161,37 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Oprește listener-ul pentru a evita scurgeri de memorie
+    protected void onResume() {
+        super.onResume();
+        if (chatId != null) {
+            loadMessages();
+            markMessagesAsRead();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
         if (messagesListener != null) {
             messagesListener.remove();
+            messagesListener = null;
+        }
+        if (loadMessagesListener != null) {
+            loadMessagesListener.remove();
+            loadMessagesListener = null;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (messagesListener != null) {
+            messagesListener.remove();
+            messagesListener = null;
+        }
+        if (loadMessagesListener != null) {
+            loadMessagesListener.remove();
+            loadMessagesListener = null;
         }
     }
 
@@ -191,8 +214,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String messageText) {
-        Message message = new Message(currentUserId, otherUserId, messageText);
-        // Nu setăm timestamp, Firestore îl va seta automat datorită @ServerTimestamp
+        Message message = new Message(currentUserId, otherUserId, messageText, false);
 
         db.collection("Chats").document(chatId)
                 .collection("Messages")

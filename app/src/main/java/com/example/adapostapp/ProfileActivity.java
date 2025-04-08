@@ -1,7 +1,7 @@
 package com.example.adapostapp;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Html;
@@ -11,88 +11,65 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.adapostapp.utils.UserUtils;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import com.bumptech.glide.Glide;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.messaging.FirebaseMessaging;
-
-public class ProfileActivity extends AppCompatActivity {
+public class ProfileActivity extends BaseActivity {
     private FirebaseAuth auth;
     private FirebaseFirestore db;
     private FirebaseUser user;
     private GoogleSignInClient googleSignInClient;
     private TextView userNameTextView, textViewRegister, adminNameTextView, textViewForgotPassword;
     private CircleImageView userPhotoImageView, adminPhotoImageView;
-    private BottomNavigationView bottomNavigationView;
     private EditText emailET, passwordET;
-    private ProgressDialog progressDialog;
+    private ProgressBar progressBar;
     private LinearLayout editProfileLayout, notificationLayout, favoritesLayout, adoptionsLayout, logoutLayout, linearLayoutUser,
-            linearLayoutAdmin, addAnimalLayout, editAnimalLayout, adminLogOutLayout, linearLayoutLogin, adoptionApplication;
+            linearLayoutAdmin, addAnimalLayout, editAnimalLayout, adminLogOutLayout, linearLayoutLogin, adoptionApplication, volunteersLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+
         linearLayoutUser = findViewById(R.id.linearLayoutUser);
         linearLayoutAdmin = findViewById(R.id.linearLayoutAdmin);
         linearLayoutLogin = findViewById(R.id.linearLayoutLogin);
         ImageButton buttonBackToMain = findViewById(R.id.buttonBackToMain);
 
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        bottomNavigationView.setSelectedItemId(R.id.navigation_profile);
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(ProfileActivity.this, MainActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_favorites) {
-                startActivity(new Intent(ProfileActivity.this, FavoritesActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(ProfileActivity.this, ChatListActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_animals) {
-                startActivity(new Intent(ProfileActivity.this, ListAnimalActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_profile) {
-                return true;
-            }
-            return false;
-        });
-
-
         emailET = findViewById(R.id.email);
         passwordET = findViewById(R.id.password);
         Button loginButton = findViewById(R.id.loginButton);
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Se autentifică...");
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.GONE);
         loginButton.setOnClickListener(view -> loginUser());
         Button signInGoogleButton = findViewById(R.id.signInGoogleButton);
 
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        user = auth.getCurrentUser();
 
-
+        setupBottomNavigation(R.id.navigation_profile);
         logoutLayout = findViewById(R.id.logoutLayout);
         adoptionsLayout = findViewById(R.id.AdoptionsLayout);
         favoritesLayout = findViewById(R.id.favoritesLayout);
@@ -108,6 +85,7 @@ public class ProfileActivity extends AppCompatActivity {
         addAnimalLayout = findViewById(R.id.addAnimalLayout);
         editAnimalLayout = findViewById(R.id.editAnimalLayout);
         adoptionApplication = findViewById(R.id.adoptionApplicationLinearLayout);
+        volunteersLayout = findViewById(R.id.volunteerApplicationLinearLayout);
         adminLogOutLayout = findViewById(R.id.adminLogoutLayout);
         textViewRegister.setText(Html.fromHtml("Nu ai un cont? <font color='#06D6A0'><b>Înregistrează-te</b></font>"));
 
@@ -118,15 +96,14 @@ public class ProfileActivity extends AppCompatActivity {
             int screenHeight = rootView.getRootView().getHeight();
             int keypadHeight = screenHeight - r.bottom;
 
-            if (keypadHeight > screenHeight * 0.15) {
-                // Tastatura este afișată
-                bottomNavigationView.setVisibility(View.GONE);
-            } else {
-                // Tastatura este ascunsă
-                bottomNavigationView.setVisibility(View.VISIBLE);
+            if (bottomNavigationView != null) {
+                if (keypadHeight > screenHeight * 0.15) {
+                    bottomNavigationView.setVisibility(View.GONE);
+                } else {
+                    bottomNavigationView.setVisibility(View.VISIBLE);
+                }
             }
         });
-
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -134,7 +111,6 @@ public class ProfileActivity extends AppCompatActivity {
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        user = auth.getCurrentUser();
         if (user != null) {
             Log.d("ProfileActivity", "onCreate verificare - Utilizatorul este autentificat!");
             linearLayoutLogin.setVisibility(View.GONE);
@@ -162,43 +138,56 @@ public class ProfileActivity extends AppCompatActivity {
         logoutLayout.setOnClickListener(v -> showSignOutConfirmationDialog());
         addAnimalLayout.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, AddAnimalActivity.class)));
         editAnimalLayout.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, ListAnimalActivity.class)));
-        adoptionApplication.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, AdoptionApplicationActivity.class)));
+        adoptionApplication.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, ApplicationsListActivity.class);
+            intent.putExtra("selectedTab", 0);
+            startActivity(intent);
+        });
+        volunteersLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, ApplicationsListActivity.class);
+            intent.putExtra("selectedTab", 1);
+            startActivity(intent);
+        });
         adminLogOutLayout.setOnClickListener(v -> showSignOutConfirmationDialog());
     }
 
+    @Override
+    protected int getSelectedItemId() {
+        return R.id.navigation_profile;
+    }
+
     private void resetPassword(String email) {
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "Nu există conexiune la internet!", Toast.LENGTH_SHORT).show();
+            return;
+        }
         auth.sendPasswordResetEmail(email)
-                .addOnSuccessListener(task -> {
-                    Toast.makeText(this, "Link de resetare a parolei a fost trimis!. Verificati emailul.", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "A aparut o eroare. Te rugam sa mai incerci o data!", Toast.LENGTH_SHORT).show();
-                });
+                .addOnSuccessListener(task -> Toast.makeText(this, "Link de resetare a parolei a fost trimis!. Verificati emailul.", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(this, "A aparut o eroare. Te rugam sa mai incerci o data!", Toast.LENGTH_SHORT).show());
     }
 
     private void showUserInfo(String role) {
         user = FirebaseAuth.getInstance().getCurrentUser();
-
         UserUtils.getUserInfo(user, new UserUtils.UserInfoCallback() {
             @Override
             public void onUserInfoRetrieved(DocumentSnapshot documentSnapshot) {
-                if ("admin".equals(role)) {
+                if (Constants.ROLE_ADMIN.equals(role)) {
                     adminNameTextView.setText(documentSnapshot.getString("name"));
-//                    String imageUrl = (user.getPhotoUrl() != null) ? user.getPhotoUrl().toString() : null;
                     String imageUrl = documentSnapshot.getString("profileImageUrl");
                     Log.d("ImageURL", "Image URL: " + imageUrl);
                     Glide.with(ProfileActivity.this)
                             .load(imageUrl)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .placeholder(R.drawable.ic_launcher_foreground)
                             .error(R.drawable.ic_launcher_foreground)
                             .into(adminPhotoImageView);
-                }else {
+                } else {
                     userNameTextView.setText(documentSnapshot.getString("name"));
-//                    String imageUrl = (user.getPhotoUrl() != null) ? user.getPhotoUrl().toString() : null;
                     String imageUrl = documentSnapshot.getString("profileImageUrl");
                     Log.d("ImageURL", "Image URL: " + imageUrl);
                     Glide.with(ProfileActivity.this)
                             .load(imageUrl)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .placeholder(R.drawable.ic_launcher_foreground)
                             .error(R.drawable.ic_launcher_foreground)
                             .into(userPhotoImageView);
@@ -207,14 +196,17 @@ public class ProfileActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                Log.e("ProfileActivity showUserInfo", "Utilizatorul nu a fost găsit în Firestore!");
+                Log.e("ProfileActivity showUserInfo", "Utilizatorul nu a fost găsit în Firestore!", e);
                 Toast.makeText(ProfileActivity.this, "Utilizatorul nu a fost găsit în Firestore!", Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     private void signInWithGoogle() {
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "Nu există conexiune la internet!", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent signInIntent = googleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, 100);
     }
@@ -238,38 +230,52 @@ public class ProfileActivity extends AppCompatActivity {
                                 Toast.makeText(this, "Firebase Authentication Failed", Toast.LENGTH_SHORT).show();
                             }
                         });
-            }).addOnFailureListener(e -> {
-                Toast.makeText(this, "Google Sign-In Failed", Toast.LENGTH_SHORT).show();
-            });
+            }).addOnFailureListener(e -> Toast.makeText(this, "Google Sign-In Failed", Toast.LENGTH_SHORT).show());
         }
     }
 
-
     private void showSignOutConfirmationDialog() {
-        // Creează un dialog de confirmare
         new AlertDialog.Builder(this)
                 .setTitle("Deconectare")
                 .setMessage("Ești sigur că vrei să te deconectezi?")
-                .setPositiveButton("Da", (dialog, which) -> {
-                    // Apelează metoda signOut dacă utilizatorul confirmă
-                    logOut();
-                })
-                .setNegativeButton("Anulează", (dialog, which) -> {
-                    // Închide dialogul fără nicio acțiune
-                    dialog.dismiss();
-                })
+                .setPositiveButton("Da", (dialog, which) -> logOut())
+                .setNegativeButton("Anulează", (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
     private void logOut() {
+        SharedPreferences prefs = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.remove(Constants.KEY_USER_ROLE);
+        editor.apply();
+
+        String userId = user.getUid();
+        if (isNetworkAvailable()) {
+            db.collection("users")
+                    .document(userId)
+                    .update("fcmToken", null)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("ProfileActivity", "Token FCM șters din Firestore");
+                        proceedWithLogout();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("ProfileActivity", "Eroare la ștergerea token-ului FCM", e);
+                        Toast.makeText(this, "Eroare la deconectare. Încearcă din nou.", Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+            Toast.makeText(this, "Nu există conexiune la internet! Deconectare locală.", Toast.LENGTH_SHORT).show();
+            proceedWithLogout();
+        }
+    }
+
+    private void proceedWithLogout() {
         FirebaseAuth.getInstance().signOut();
         googleSignInClient.signOut().addOnCompleteListener(this, task -> {
             FirebaseFirestore.getInstance().clearPersistence().addOnCompleteListener(clearTask -> {
-                // Restart activitate pentru a reseta UI-ul
                 Intent intent = new Intent(ProfileActivity.this, ProfileActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
-                finish(); // Oprește activitatea curentă pentru a preveni revenirea la sesiunea veche
+                finish();
             });
         });
     }
@@ -283,48 +289,25 @@ public class ProfileActivity extends AppCompatActivity {
             return;
         }
 
-        progressDialog.show();
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "Nu există conexiune la internet!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
-                    progressDialog.dismiss();
+                    progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
                         FirebaseUser user = auth.getCurrentUser();
                         if (user != null) {
-                            // Obține și salvează token-ul FCM
-                            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
-                                if (tokenTask.isSuccessful()) {
-                                    String token = tokenTask.getResult();
-                                    db.collection("users")
-                                            .document(user.getUid())
-                                            .update("fcmToken", token)
-                                            .addOnSuccessListener(aVoid -> Log.d("FCM", "Token saved for user: " + user.getUid()))
-                                            .addOnFailureListener(e -> Log.w("FCM", "Error saving token", e));
-                                } else {
-                                    Log.w("FCM", "Fetching token failed", tokenTask.getException());
-                                }
-                            });
+                            saveFcmToken(user.getUid());
                             isUserExist(user);
                         }
                     } else {
-                        // Verificăm tipul erorii
                         Toast.makeText(ProfileActivity.this, "Cont inexistent sau parolă greșită.", Toast.LENGTH_LONG).show();
                     }
                 });
-    }
-
-    private void checkUserRole(FirebaseUser user) {
-        Log.d("ProfileActivity", "checkUserRole - Verificare rol pentru utilizatorul " + user.getUid() + " " + user.getDisplayName());
-        UserUtils.checkUserRole(user, new UserUtils.UserRoleCallback() {
-            @Override
-            public void onRoleRetrieved(String role) {
-                updateUserInfo(role, user);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Log.e("Firestore", "Eroare la preluarea rolului", e);
-            }
-        });
     }
 
     private void checkAndSaveUserGoogle(FirebaseUser firebaseUser, GoogleSignInAccount account) {
@@ -333,35 +316,41 @@ public class ProfileActivity extends AppCompatActivity {
             return;
         }
 
+        if (account == null) {
+            Log.e("Firestore", "GoogleSignInAccount este null!");
+            Toast.makeText(this, "Eroare la autentificare cu Google. Te rugăm să încerci din nou.", Toast.LENGTH_SHORT).show();
+            logOut();
+            return;
+        }
+
         String userId = firebaseUser.getUid();
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "Nu există conexiune la internet!", Toast.LENGTH_SHORT).show();
+            updateUserInfo(getUserRole(), firebaseUser);
+            setupBottomNavigation(R.id.navigation_profile);
+            return;
+        }
 
         db.collection("users").document(userId).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 DocumentSnapshot document = task.getResult();
-                // Obține token-ul FCM
                 FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
                     if (tokenTask.isSuccessful()) {
                         String token = tokenTask.getResult();
                         if (document.exists()) {
-                            // Utilizator existent: actualizează token-ul
                             db.collection("users").document(userId)
                                     .update("fcmToken", token)
-                                    .addOnSuccessListener(aVoid -> Log.d("FCM", "Token updated for existing user: " + userId))
-                                    .addOnFailureListener(e -> Log.w("FCM", "Error updating token", e));
-                            checkUserRole(firebaseUser);
+                                    .addOnSuccessListener(aVoid -> Log.d("FCM", "Token actualizat pentru utilizatorul existent: " + userId))
+                                    .addOnFailureListener(e -> Log.w("FCM", "Eroare la actualizarea token-ului", e));
+                            checkRole(firebaseUser); // Actualizăm rolul și meniul
                         } else {
-                            // Utilizator nou: salvează datele inclusiv token-ul
-                            if (account == null) {
-                                Log.e("Firestore", "GoogleSignInAccount este null!");
-                                return;
-                            }
                             String photoUrl = (account.getPhotoUrl() != null) ? account.getPhotoUrl().toString() : "";
-                            User user = new User(account.getDisplayName(), photoUrl, account.getEmail(), "user");
-                            user.setFcmToken(token); // Presupun că ai un setter în clasa User
+                            User user = new User(account.getDisplayName(), photoUrl, account.getEmail(), Constants.ROLE_USER);
+                            user.setFcmToken(token);
                             db.collection("users").document(userId).set(user)
                                     .addOnSuccessListener(aVoid -> {
                                         Log.d("Firestore", "Utilizatorul a fost salvat în Firestore cu token!");
-                                        updateUserInfo("user", firebaseUser);
+                                        checkRole(firebaseUser); // Actualizăm rolul și meniul
                                     })
                                     .addOnFailureListener(e -> {
                                         Log.e("Firestore", "Eroare la salvarea utilizatorului", e);
@@ -369,10 +358,9 @@ public class ProfileActivity extends AppCompatActivity {
                                     });
                         }
                     } else {
-                        Log.w("FCM", "Fetching token failed", tokenTask.getException());
-                        // Continuă fără token dacă obținerea eșuează
+                        Log.w("FCM", "Eroare la obținerea token-ului", tokenTask.getException());
                         if (document.exists()) {
-                            checkUserRole(firebaseUser);
+                            checkRole(firebaseUser); // Actualizăm rolul și meniul
                         }
                     }
                 });
@@ -383,21 +371,19 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
-
     private void updateUserInfo(String role, FirebaseUser user) {
-        // Actualizează UI pe baza rolului
-        if ("admin".equals(role)) {
+        if (Constants.ROLE_ADMIN.equals(role)) {
             linearLayoutAdmin.setVisibility(View.VISIBLE);
             linearLayoutUser.setVisibility(View.GONE);
             linearLayoutLogin.setVisibility(View.GONE);
-        } else if ("user".equals(role)) {
+        } else if (Constants.ROLE_USER.equals(role)) {
             linearLayoutLogin.setVisibility(View.GONE);
             linearLayoutUser.setVisibility(View.VISIBLE);
             linearLayoutAdmin.setVisibility(View.GONE);
             notificationLayout.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, NotificationsActivity.class)));
             favoritesLayout.setOnClickListener(v -> startActivity(new Intent(ProfileActivity.this, FavoritesActivity.class)));
         }
-        if (isUserLoggedInWithGoogle(user)) { // Ascunde butonul de editare profil daca e GoogleAuth
+        if (isUserLoggedInWithGoogle(user)) {
             editProfileLayout.setVisibility(View.GONE);
             Log.d("ProfileActivity", "Utilizatorul este autentificat cu Google!");
         }
@@ -405,16 +391,13 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void isUserExist(FirebaseUser user) {
-        // Verifică dacă utilizatorul există
         UserUtils.isUserExist(user, new UserUtils.UserExistCallback() {
             @Override
             public void onUserExist(boolean exists) {
                 if (exists) {
-                    // Utilizatorul există
                     Log.d("AnotherActivity", "Utilizatorul există!");
-                    checkUserRole(user);
+                    updateUserInfo(getUserRole(), user); // Actualizăm rolul și meniul
                 } else {
-                    // Utilizatorul nu există
                     Log.e("AnotherActivity", "Utilizatorul nu există sau a fost sters!");
                     Toast.makeText(ProfileActivity.this, "Utilizatorul nu există sau a fost sters!", Toast.LENGTH_SHORT).show();
                     logOut();
@@ -423,7 +406,6 @@ public class ProfileActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                // Gestionarea erorii
                 Log.e("AnotherActivity", "Eroare la verificarea utilizatorului", e);
             }
         });
@@ -433,11 +415,30 @@ public class ProfileActivity extends AppCompatActivity {
         if (user != null) {
             for (com.google.firebase.auth.UserInfo profile : user.getProviderData()) {
                 if (profile.getProviderId().equals(GoogleAuthProvider.PROVIDER_ID)) {
-                    return true; // Utilizatorul este logat cu Google
+                    return true;
                 }
             }
         }
-        return false; // Utilizatorul este logat cu email și parolă
+        return false;
     }
 
+    private void checkRole(FirebaseUser user) {
+        UserUtils.checkUserRole(user, new UserUtils.UserRoleCallback() {
+            @Override
+            public void onRoleRetrieved(String role) {
+                userRole = role;
+                Log.d("ProfileActivity", "Rol actualizat din Firestore: " + role);
+                SharedPreferences prefs = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(Constants.KEY_USER_ROLE, role);
+                editor.apply();
+                setupBottomNavigation(R.id.navigation_profile);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("ProfileActivity", "Eroare la preluarea rolului", e);
+            }
+        });
+    }
 }

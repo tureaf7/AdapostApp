@@ -6,6 +6,7 @@ import com.google.firebase.Timestamp;
 import java.util.Date;
 
 public class AdoptionApplication {
+    String id;
     private String applicationId;
     private String userId;
     private String animalId;
@@ -142,4 +143,12 @@ public class AdoptionApplication {
 
     public String getDetails() { return details; }
     public void setDetails(String details) { this.details = details; }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 }

@@ -6,14 +6,12 @@ import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -23,90 +21,71 @@ import android.widget.Toast;
 import android.Manifest;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.OptIn;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
-import com.example.adapostapp.utils.UserUtils;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
+import com.google.android.material.badge.ExperimentalBadgeUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private LinearLayout horizontalLinearLayout;
     private ImageButton notificationButton;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    private BottomNavigationView bottomNavigationView;
     private ProgressBar progressBar;
     private TextView adoptInfoText, donatText, voluntarText, noneAnimalTextView;
     private FirebaseUser user;
     private static final int NOTIFICATION_PERMISSION_CODE = 101;
     private static final String TAG = "MainActivity";
-    private static final String PREFS_NAME = "AdapostAppPrefs";
-    private static final String KEY_HAS_UNREAD_MESSAGES = "hasUnreadMessages";
-    private ListenerRegistration unreadMessagesListener;
-    private SharedPreferences sharedPreferences;
+    private ListenerRegistration notificationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Verifică dacă utilizatorul este admin și redirecționează
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null && isAdmin()) {
+            Log.d(TAG, "Utilizatorul este admin, redirecționare către ListAnimalActivity");
+            Intent intent = new Intent(this, ListAnimalActivity.class); // Sau o altă activitate pentru admin
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         // Inițializări UI
         horizontalLinearLayout = findViewById(R.id.horizontalLinearLayout);
         notificationButton = findViewById(R.id.notificationButton);
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
         progressBar = findViewById(R.id.progressBar);
         adoptInfoText = findViewById(R.id.adoptInfoText);
         donatText = findViewById(R.id.donatText);
         voluntarText = findViewById(R.id.voluntarText);
         noneAnimalTextView = findViewById(R.id.noneAnimalstextView);
 
+        setupBottomNavigation(R.id.navigation_home);
+
         // Inițializări Firebase
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
 
-        // Inițializează SharedPreferences
-        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-
-        notificationButton.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, NotificationsActivity.class));
-        });
-
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                return true;
-            } else if (itemId == R.id.navigation_favorites) {
-                startActivity(new Intent(MainActivity.this, FavoritesActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(MainActivity.this, ChatListActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_animals) {
-                startActivity(new Intent(MainActivity.this, ListAnimalActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_profile) {
-                startActivity(new Intent(MainActivity.this, ProfileActivity.class));
-                return true;
-            }
-            return false;
-        });
+        voluntarText.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, VolunteerFormActivity.class)));
+        notificationButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, NotificationsActivity.class)));
 
         // Creează canalul de notificări
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -119,12 +98,16 @@ public class MainActivity extends AppCompatActivity {
             manager.createNotificationChannel(channel);
         }
 
-        updateMessagesIcon(sharedPreferences.getBoolean(KEY_HAS_UNREAD_MESSAGES, false));
-        loadChats();
+        if (user != null) {
+            checkNotifications();
+        }
         handleNotificationIntent(getIntent());
         checkNotificationPermission();
     }
-
+    @Override
+    protected int getSelectedItemId() {
+        return R.id.navigation_home;
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -153,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Nu există extra-uri.");
         }
 
-        // Verificăm dacă intent-ul provine dintr-o notificare
         boolean fromNotification = intent.getBooleanExtra("from_notification", false);
         String clickAction = intent.getStringExtra("click_action");
         String chatId = intent.getStringExtra("chatId");
@@ -161,35 +143,84 @@ public class MainActivity extends AppCompatActivity {
 
         if (fromNotification || clickAction != null) {
             Log.d(TAG, "Intent de notificare detectat: click_action=" + clickAction + ", chatId=" + chatId + ", otherUserId=" + otherUserId);
-
             if ("CHAT_ACTIVITY".equals(clickAction) && chatId != null && otherUserId != null) {
                 Intent chatIntent = new Intent(this, ChatActivity.class);
                 chatIntent.putExtra("chatId", chatId);
                 chatIntent.putExtra("otherUserId", otherUserId);
                 startActivity(chatIntent);
             } else {
-                Log.w(TAG, "Datele notificării sunt incomplete: click_action=" + clickAction + ", chatId=" + chatId + ", otherUserId=" + otherUserId);
+                Log.w(TAG, "Datele notificării sunt incomplete.");
             }
         } else {
-            Log.d(TAG, "Intent-ul nu provine dintr-o notificare (from_notification=false și click_action lipsă).");
+            Log.d(TAG, "Intent-ul nu provine dintr-o notificare.");
+        }
+    }
+
+    @OptIn(markerClass = ExperimentalBadgeUtils.class)
+    private void checkNotifications() {
+        if (user == null) return;
+
+        notificationListener = db.collection("Notifications")
+                .whereEqualTo("viewed", false)
+                .whereEqualTo("userId", user.getUid())
+                .addSnapshotListener((queryDocumentSnapshots, e) -> {
+                    if (e != null) {
+                        Log.w(TAG, "Eroare la preluarea notificărilor", e);
+                        return;
+                    }
+
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        Log.d(TAG, "Număr de notificări nevizualizate: " + queryDocumentSnapshots.size());
+                        BadgeDrawable badge = BadgeDrawable.create(this);
+                        badge.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
+                        badge.setHorizontalOffset(dpToPx(30));
+                        badge.setVerticalOffset(dpToPx(30));
+                        badge.setBadgeGravity(BadgeDrawable.TOP_END);
+                        badge.setBadgeTextColor(getResources().getColor(android.R.color.white));
+                        badge.setNumber(queryDocumentSnapshots.size());
+                        badge.setVisible(true);
+                        BadgeUtils.attachBadgeDrawable(badge, notificationButton);
+                    } else {
+                        BadgeUtils.detachBadgeDrawable(BadgeDrawable.create(this), notificationButton);
+                    }
+                });
+    }
+
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (notificationListener != null) {
+            notificationListener.remove();
+            notificationListener = null;
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (user != null && notificationListener == null) {
+            checkNotifications();
         }
     }
 
     @SuppressLint("SetTextI18n")
     private void fetchAnimals() {
         horizontalLinearLayout.removeAllViews();
-        progressBar.setVisibility(View.VISIBLE); // Afișează indicatorul de încărcare
+        progressBar.setVisibility(View.VISIBLE);
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
-            Log.e("Firestore", "Utilizatorul nu este autentificat.");
+            Log.d("Firestore", "Utilizatorul nu este autentificat, afișare ca guest.");
             readAnimalsFromDB();
             return;
         }
 
         String uid = currentUser.getUid();
-
-        // Preia favoritele utilizatorului
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     List<String> favoriteAnimalIds = new ArrayList<>();
@@ -221,13 +252,7 @@ public class MainActivity extends AppCompatActivity {
                         Animal animal = document.toObject(Animal.class);
                         addAnimalCardToUI(animal, "");
                     }
-                    View itemView = LayoutInflater.from(this).inflate(R.layout.view_more, horizontalLinearLayout, false);
-                    ImageButton imageButton = itemView.findViewById(R.id.imageButton);
-                    imageButton.setOnClickListener(v -> {
-                        Intent intent = new Intent(MainActivity.this, ListAnimalActivity.class);
-                        startActivity(intent);
-                    });
-                    horizontalLinearLayout.addView(itemView);
+                    addViewMoreButton();
                 }).addOnFailureListener(e -> {
                     Log.w("Firebase", "Error getting documents.", e);
                     Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
@@ -251,17 +276,18 @@ public class MainActivity extends AppCompatActivity {
                         String favoriteTag = favoriteAnimalIds.contains(document.getId()) ? "favorite" : "not_favorite";
                         addAnimalCardToUI(animal, favoriteTag);
                     }
-                    View itemView = LayoutInflater.from(this).inflate(R.layout.view_more, horizontalLinearLayout, false);
-                    ImageButton imageButton = itemView.findViewById(R.id.imageButton);
-                    imageButton.setOnClickListener(v -> {
-                        Intent intent = new Intent(MainActivity.this, ListAnimalActivity.class);
-                        startActivity(intent);
-                    });
-                    horizontalLinearLayout.addView(itemView);
+                    addViewMoreButton();
                 }).addOnFailureListener(e -> {
                     Log.w("Firebase", "Error getting documents.", e);
                     Toast.makeText(this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void addViewMoreButton() {
+        View itemView = LayoutInflater.from(this).inflate(R.layout.view_more, horizontalLinearLayout, false);
+        ImageButton imageButton = itemView.findViewById(R.id.imageButton);
+        imageButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, ListAnimalActivity.class)));
+        horizontalLinearLayout.addView(itemView);
     }
 
     private void addAnimalCardToUI(Animal animal, String favoriteTag) {
@@ -280,36 +306,36 @@ public class MainActivity extends AppCompatActivity {
         animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
         imageGen.setImageResource(animal.getGen().equals("Mascul") ? R.drawable.ic_male : R.drawable.ic_female);
 
-        if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
-            Glide.with(this)
-                    .load(animal.getPhoto())
-                    .error(R.drawable.ic_launcher_foreground)
-                    .into(animalPhoto);
-        }
-
-        checkUserRole(user, imageButtonFavorite);
-
-        imageButtonFavorite.setTag(favoriteTag);
-        if ("favorite".equals(imageButtonFavorite.getTag())) {
-            imageButtonFavorite.setImageResource(R.drawable.ic_favorite_red);
-        } else if ("not_favorite".equals(imageButtonFavorite.getTag())) {
-            imageButtonFavorite.setImageResource(R.drawable.ic_favorite);
-        } else {
-            imageButtonFavorite.setVisibility(View.GONE);
-        }
-
-        imageButtonFavorite.setOnClickListener(v -> {
-            if ("favorite".equals(imageButtonFavorite.getTag())) {
-                removeFromFavorite(imageButtonFavorite, animal.getId());
-            } else {
-                addToFavorite(imageButtonFavorite, animal.getId());
+        if (!isFinishing() && !isDestroyed()) {
+            if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
+                Glide.with(this)
+                        .load(animal.getPhoto())
+                        .error(R.drawable.ic_launcher_foreground)
+                        .into(animalPhoto);
             }
-        });
+        } else {
+            Log.w(TAG, "Activitatea este distrusă, nu încarcăm imaginea pentru " + animal.getName());
+        }
+
+        // Butonul de favorite este vizibil doar pentru utilizatori autentificați cu rol "user"
+        if (user != null && "user".equals(getUserRole())) {
+            imageButtonFavorite.setVisibility(VISIBLE);
+            imageButtonFavorite.setTag(favoriteTag);
+            imageButtonFavorite.setImageResource("favorite".equals(favoriteTag) ? R.drawable.ic_favorite_red : R.drawable.ic_favorite);
+
+            imageButtonFavorite.setOnClickListener(v -> {
+                if ("favorite".equals(imageButtonFavorite.getTag())) {
+                    removeFromFavorite(imageButtonFavorite, animal.getId());
+                } else {
+                    addToFavorite(imageButtonFavorite, animal.getId());
+                }
+            });
+        }
 
         itemView.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AnimalProfileActivity.class);
             intent.putExtra("animal", animal.getId());
-            intent.putExtra("favorite", imageButtonFavorite.getTag().toString());
+            intent.putExtra("favorite", imageButtonFavorite.getTag() != null ? imageButtonFavorite.getTag().toString() : "not_favorite");
             startActivity(intent);
         });
 
@@ -358,22 +384,8 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void checkUserRole(FirebaseUser user, ImageButton imageButtonFavorite) {
-        if (user == null) return;
-
-        db.collection("users").document(user.getUid()).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists() && documentSnapshot.contains("role")) {
-                        String role = documentSnapshot.getString("role");
-                        if ("user".equals(role)) {
-                            imageButtonFavorite.setVisibility(VISIBLE);
-                        }
-                    }
-                });
-    }
-
     private void checkNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE);
             } else {
@@ -392,43 +404,5 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Permisiunea pentru notificări a fost refuzată!", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    private void loadChats() {
-        unreadMessagesListener = db.collection("users")
-                .document(user.getUid())
-                .collection("chats")
-                .whereEqualTo("hasUnreadMessages", true)
-                .addSnapshotListener((snapshot, error) -> {
-                    if (error != null) {
-                        Log.w(TAG, "Eroare la ascultarea mesajelor necitite", error);
-                        Toast.makeText(this, "Eroare la preluarea conversațiilor!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    boolean hasUnreadMessages = snapshot != null && !snapshot.isEmpty();
-                    Log.d(TAG, hasUnreadMessages ? "Mesaje necitite detectate" : "Nu există mesaje necitite");
-
-                    // Salvează starea în SharedPreferences
-                    sharedPreferences.edit()
-                            .putBoolean(KEY_HAS_UNREAD_MESSAGES, hasUnreadMessages)
-                            .apply();
-
-                    // Actualizează iconița
-                    updateMessagesIcon(hasUnreadMessages);
-                });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (unreadMessagesListener != null) {
-            unreadMessagesListener.remove();
-        }
-    }
-
-    private void updateMessagesIcon(boolean hasUnreadMessages) {
-        int iconResId = hasUnreadMessages ? R.drawable.ic_message_red : R.drawable.ic_message;
-        bottomNavigationView.getMenu().findItem(R.id.navigation_messages).setIcon(iconResId);
     }
 }

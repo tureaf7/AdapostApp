@@ -8,16 +8,17 @@ public class Message {
     private String senderId;
     private String receiverId;
     private String message;
+    @ServerTimestamp
     private Timestamp timestamp;
     private boolean isRead;
 
     public Message() {}
 
-    public Message(String senderId, String receiverId, String message) {
+    public Message(String senderId, String receiverId, String message, boolean isRead) {
         this.senderId = senderId;
         this.receiverId = receiverId;
         this.message = message;
-        this.isRead = false;
+        this.isRead = isRead;
     }
 
 
@@ -28,7 +29,9 @@ public class Message {
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
 
-    @ServerTimestamp
+    public boolean isRead() { return isRead; }
+    public void setRead(boolean isRead) { this.isRead = isRead; }
+
     public Timestamp getTimestamp() { return timestamp; }
     public void setTimestamp(Timestamp timestamp) { this.timestamp = timestamp; }
 }

@@ -43,9 +43,11 @@
                 <ImageButton
                     android:id="@+id/notificationButton"
                     android:layout_width="64dp"
-                    android:layout_height="64dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
                     android:background="@drawable/ripple_custom"
                     android:contentDescription="Deschide notificările"
+                    android:cropToPadding="true"
                     android:padding="16dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_notification" />
@@ -116,12 +118,12 @@
                 android:id="@+id/noneAnimalstextView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_margin="20dp"
                 android:layout_marginTop="100dp"
                 android:gravity="center"
                 android:text="Lista de animale este goala"
                 android:textColor="#525252"
                 android:textSize="20sp"
-                android:layout_margin="20dp"
                 android:visibility="gone" />
 
             <ProgressBar
@@ -201,7 +203,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_navigation_menu" />
+        app:menu="@menu/bottom_navigation_menu"
+         />
 
     <!-- Notificări (Dreapta sus) -->
 

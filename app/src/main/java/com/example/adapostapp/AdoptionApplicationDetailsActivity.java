@@ -16,20 +16,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.example.adapostapp.utils.UserUtils;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.WriteBatch;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.RemoteMessage;
-
-import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -39,14 +33,14 @@ import java.util.Locale;
 import java.util.Calendar;
 import java.util.Map;
 
-public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
+public class AdoptionApplicationDetailsActivity extends BaseActivity {
     private FirebaseAuth auth;
     private FirebaseFirestore db;
     private FirebaseUser firebaseUser;
     private TextView userName, userAddress, userPhoneNumber, animalName, petBefore, petCurrent, adoptedBefore,
             livingEnvironment, rentOrOwn, ownerPermission, allergicMember, careAnimal, vacationPlan, healthBehavior, shelterMessage,
-            userEmail, animalBreed, animalAge, animalArrivalDate, petPreviousDetails, petCurrentDetails,
-            applicationStatusRejected, applicationStatusApproved;
+            userEmail, adminName, animalBreed, animalAge, animalArrivalDate, petPreviousDetails, petCurrentDetails,
+            applicationStatusRejected, applicationStatusApproved, detailsApplication;
     private ImageView userPhoto, animalPhoto;
     private ImageButton callButton, emailButton, messageButton, backButton;
     private Button approveButton, rejectButton;
@@ -57,6 +51,8 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_adoption_application_details);
+
+        setupBottomNavigation(R.id.navigation_applications);
 
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -69,10 +65,11 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
         userPhoneNumber = findViewById(R.id.user_phone_number);
         animalName = findViewById(R.id.animal_name);
         userEmail = findViewById(R.id.user_email);
+        adminName = findViewById(R.id.adminName);
         animalBreed = findViewById(R.id.animal_breed);
         animalAge = findViewById(R.id.animal_age);
         animalArrivalDate = findViewById(R.id.animal_arrival_date);
-        petBefore = findViewById(R.id.user_have_pets_before);
+        petBefore = findViewById(R.id.experienceAnswer);
         petCurrent = findViewById(R.id.user_have_other_pets);
         petPreviousDetails = findViewById(R.id.user_previous_pets_details);
         petCurrentDetails = findViewById(R.id.user_other_pets_details);
@@ -88,6 +85,7 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
         applicationStatusRejected = findViewById(R.id.applicationStatusRejected);
         applicationStatusApproved = findViewById(R.id.applicationStatusAproved);
         linearLayoutButtons = findViewById(R.id.linearLayoutButtons);
+        detailsApplication = findViewById(R.id.detailsApplication);
         linearLayoutStatusInfo = findViewById(R.id.linearLayoutStatusInfo);
 
         userPhoto = findViewById(R.id.imageViewUser);
@@ -101,6 +99,11 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
         approveButton = findViewById(R.id.buttonApproveAdoption);
         rejectButton = findViewById(R.id.buttonRejectAdoption);
         getAdoptionApplicationDetails();
+    }
+
+    @Override
+    protected int getSelectedItemId() {
+        return R.id.navigation_applications;
     }
 
     private void getAdoptionApplicationDetails() {
@@ -188,6 +191,8 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
         if ("Respins".equals(adoptionApplication.getStatus()) || "Aprobat".equals(adoptionApplication.getStatus())) {
             linearLayoutButtons.setVisibility(View.GONE);
             linearLayoutStatusInfo.setVisibility(View.VISIBLE);
+            getAdminName(adoptionApplication);
+            detailsApplication.setText(adoptionApplication.getDetails());
             if ("Respins".equals(adoptionApplication.getStatus())) {
                 applicationStatusRejected.setVisibility(View.VISIBLE);
             } else if ("Aprobat".equals(adoptionApplication.getStatus())) {
@@ -207,6 +212,21 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
 
     }
 
+    private void getAdminName(AdoptionApplication adoptionApplication) {
+        db.collection("users")
+                .document(adoptionApplication.getAdminId())
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        User user = documentSnapshot.toObject(User.class);
+                        adminName.setText(user.getName());
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("VolunteerApplicationDetailsActivity", "Error getting documents: User");
+                    Toast.makeText(this, "Eroare la preluarea detaliilor utilizatorului!", Toast.LENGTH_SHORT).show();
+                });
+    }
     private void sendMessage() {
         // Preia userId din AdoptionApplication
         db.collection("AdoptionApplications")
@@ -218,39 +238,37 @@ public class AdoptionApplicationDetailsActivity extends AppCompatActivity {
                         String userId = adoptionApplication.getUserId();
                         String adminId = firebaseUser.getUid();
 
-                        // Verifică dacă există deja o conversație între admin și utilizator
-                        db.collection("Chats")
-                                .whereArrayContains("participants", adminId)
-                                .whereArrayContains("participants", userId)
+                        db.collection("users")
+                                .document(adminId)
+                                .collection("chats")
+                                .whereEqualTo("otherUserId", userId)
                                 .get()
                                 .addOnSuccessListener(queryDocumentSnapshots -> {
                                     if (!queryDocumentSnapshots.isEmpty()) {
                                         // Conversație existentă
                                         Chat chat = queryDocumentSnapshots.getDocuments().get(0).toObject(Chat.class);
-                                        chat.setChatId(queryDocumentSnapshots.getDocuments().get(0).getId());
-                                        openChat(chat, userId);
+                                        if (chat != null) {
+                                            openChat(chat.getChatId(), userId);
+                                        }
                                     } else {
-                                        // Creează o conversație nouă
-                                        String chatId = adminId + "_" + userId;
-                                        Chat newChat = new Chat(chatId, Arrays.asList(adminId, userId));
-                                        db.collection("Chats").document(chatId)
-                                                .set(newChat)
-                                                .addOnSuccessListener(aVoid -> openChat(newChat, userId))
-                                                .addOnFailureListener(e -> Toast.makeText(this, "Eroare la crearea conversației!", Toast.LENGTH_SHORT).show());
+                                        // Conversație nouă
+                                        openChat(null, userId);
                                     }
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(this, "Eroare la verificarea conversației!", Toast.LENGTH_SHORT).show();
-                                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: Chats",e);
+                                }).addOnFailureListener(e -> {
+                                    Toast.makeText(this, "Eroare la preluarea conversațiilor!", Toast.LENGTH_SHORT).show();
+                                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: Chats", e);
                                 });
                     }
                 })
-                .addOnFailureListener(e -> Toast.makeText(this, "Eroare la preluarea detaliilor cererii!", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Eroare la preluarea detaliilor cererii!", Toast.LENGTH_SHORT).show();
+                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: AdoptionApplications", e);
+                });
     }
 
-    private void openChat(Chat chat, String otherUserId) {
+    private void openChat(String chatId, String otherUserId) {
         Intent intent = new Intent(this, ChatActivity.class);
-        intent.putExtra("chatId", chat.getChatId());
+        intent.putExtra("chatId", chatId);
         intent.putExtra("otherUserId", otherUserId);
         startActivity(intent);
     }

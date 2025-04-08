@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -23,7 +24,6 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     public MessageAdapter(List<Message> messages) {
         this.messages = messages;
         this.currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
     }
 
     @NonNull
@@ -44,24 +44,28 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             Date date = timestamp.toDate();
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
             holder.textViewTimestamp.setText(sdf.format(date));
+            holder.textViewTimestamp.setVisibility(View.GONE);
         } else {
             holder.textViewTimestamp.setText("Se trimite...");
+            holder.textViewTimestamp.setVisibility(View.VISIBLE);
         }
 
-        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.textViewMessage.getLayoutParams();
+        // LayoutParams pentru CardView (în LinearLayout)
+        LinearLayout.LayoutParams cardParams = (LinearLayout.LayoutParams) holder.cardView.getLayoutParams();
+        // LayoutParams pentru textViewTimestamp (în LinearLayout)
         LinearLayout.LayoutParams timeParams = (LinearLayout.LayoutParams) holder.textViewTimestamp.getLayoutParams();
 
         if (message.getSenderId().equals(currentUserId)) {
             holder.textViewMessage.setBackgroundResource(android.R.color.holo_blue_light);
-            params.gravity = Gravity.END;
-            timeParams.gravity = Gravity.END;
+            cardParams.gravity = Gravity.END; // Mută CardView-ul la dreapta
+            timeParams.gravity = Gravity.END; // Mută timestamp-ul la dreapta
         } else {
             holder.textViewMessage.setBackgroundResource(android.R.color.darker_gray);
-            params.gravity = Gravity.START;
-            timeParams.gravity = Gravity.START;
+            cardParams.gravity = Gravity.START; // Mută CardView-ul la stânga
+            timeParams.gravity = Gravity.START; // Mută timestamp-ul la stânga
         }
 
-        holder.textViewMessage.setLayoutParams(params);
+        holder.cardView.setLayoutParams(cardParams);
         holder.textViewTimestamp.setLayoutParams(timeParams);
 
         holder.itemView.setOnClickListener(v -> {
@@ -80,12 +84,14 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     }
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView textViewSender, textViewReceiver, textViewMessage, textViewTimestamp;
+        TextView textViewMessage, textViewTimestamp;
+        CardView cardView;
 
         public MessageViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMessage = itemView.findViewById(R.id.textViewMessage);
             textViewTimestamp = itemView.findViewById(R.id.textViewTimestamp);
+            cardView = itemView.findViewById(R.id.messageCardView); // ID-ul implicit al CardView
         }
     }
 }

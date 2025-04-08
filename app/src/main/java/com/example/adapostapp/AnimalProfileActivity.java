@@ -40,7 +40,7 @@ public class AnimalProfileActivity extends AppCompatActivity {
     private LinearLayout animalStatusLayout;
     private FirebaseUser user;
     private FirebaseFirestore db;
-    private String animalId;
+    private String animalId, userRole;
     private Button adoptButton;
     private Animal animal;
 
@@ -72,7 +72,6 @@ public class AnimalProfileActivity extends AppCompatActivity {
 
         // Recuperarea obiectului Animal din Intent
         animalId = getIntent().getStringExtra("animal");
-
         if (animalId != null) {
             // Popularea profilului animalului cu datele recuperate
             getAnimalDetails(animalId, user);
@@ -85,13 +84,13 @@ public class AnimalProfileActivity extends AppCompatActivity {
         backButton.setOnClickListener(v -> onBackPressed());
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        isApplicated(animalId);
-    }
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        isApplicated(animalId);
+//    }
 
-    private void checkUserRole(FirebaseUser user) {
+    private void checkUserRole(FirebaseUser user, Animal animal) {
         Log.d("AnimalProfileActivity", "checkUserRole - Verificare rol pentru utilizatorul " + user.getUid() + " " + user.getDisplayName());
         UserUtils.checkUserRole(user, new UserUtils.UserRoleCallback() {
             @Override
@@ -103,16 +102,22 @@ public class AnimalProfileActivity extends AppCompatActivity {
                         intent.putExtra("animal", animalId);
                         startActivity(intent);
                     });
+                    if (animal.isAdopted()){
+                        statusApplication.setText("Animalul a fost adoptat");
+                        statusApplication.setVisibility(View.VISIBLE);
+                    }
                     adoptButton.setText("Vezi cereri");
                     adoptButton.setVisibility(View.VISIBLE);
                     adoptButton.setOnClickListener(v -> {
-                        Intent intent = new Intent(AnimalProfileActivity.this, AdoptionApplicationActivity.class);
+                        Intent intent = new Intent(AnimalProfileActivity.this, AdoptionApplicationDetailsActivity.class);
                         intent.putExtra("animal", animalId);
                         startActivity(intent);
                     });
                 } else {
+                    if (animal.isAdopted()){
+                        favoriteButton.setVisibility(View.GONE);
+                    }
                     isApplicated(animalId);
-
                     isFavorite(animalId);
                     favoriteButton.setOnClickListener(v -> {
                         if ("favorite".equals(favoriteButton.getTag())) {
@@ -145,13 +150,14 @@ public class AnimalProfileActivity extends AppCompatActivity {
                                 statusApplication.setText("Cerera ta este: " + adoptionApplication.getStatus());
                                 statusApplication.setVisibility(View.VISIBLE);
                                 adoptButton.setVisibility(View.GONE);
+                                favoriteButton.setVisibility(View.GONE);
                             }
                         } else {
                             // Nu au fost găsite documente
                             Log.d("Firebase", "Nu au fost găsite cereri de adopție pentru acest animal și utilizator.");
                             adoptButton.setVisibility(View.VISIBLE);
                             adoptButton.setOnClickListener(v -> {
-                                Intent intent = new Intent(AnimalProfileActivity.this, AdoptionActivity.class);
+                                Intent intent = new Intent(AnimalProfileActivity.this, AdoptionFormActivity.class);
                                 intent.putExtra("animal", animalId);
                                 startActivity(intent);
                             });
@@ -210,20 +216,16 @@ public class AnimalProfileActivity extends AppCompatActivity {
                     if (documentSnapshot.exists()) {
                         animal = documentSnapshot.toObject(Animal.class);
                         if (animal != null) {
-                            if(animal.isAdopted()){
-                                statusApplication.setText("Animal adoptat");
-                                checkUserRole(user);
-                            }else{
-                                if (user == null){
-                                    adoptButton.setVisibility(View.VISIBLE);
-                                    adoptButton.setOnClickListener(v -> {
-                                        startActivity(new Intent(AnimalProfileActivity.this, ProfileActivity.class));
-                                    });
-                                }else{
-                                    checkUserRole(user);
-                                }
-                            }
                             populateAnimalProfile(animal);
+                            if (user != null){
+                                checkUserRole(user, animal);
+                            } else {
+                                Log.d("AnimalProfileActivity", "Utilizatorul nu este autentificat.");
+                                favoriteButton.setVisibility(View.GONE);
+                                adoptButton.setVisibility(View.GONE);
+                                statusApplication.setVisibility(View.VISIBLE);
+                                statusApplication.setText("Autentifică-te pentru a adopta animalul.");
+                            }
                         }
                     } else {
                         Log.e("Firestore", "Animalul nu există în Firestore.");
@@ -260,9 +262,9 @@ public class AnimalProfileActivity extends AppCompatActivity {
         // Încarcă imaginea animalului folosind Glide
         Glide.with(this).load(animal.getPhoto()).into(animalImage);
 
-        if (animal.isAdopted()){
-            adoptButton.setVisibility(View.GONE);
-        }
+//        if (animal.isAdopted()){
+//            adoptButton.setVisibility(View.GONE);
+//        }
 
     }
 

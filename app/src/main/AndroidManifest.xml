@@ -41,11 +41,14 @@
         <activity android:name=".ListAnimalActivity" android:exported="false" />
         <activity android:name=".AddAnimalActivity" android:exported="false" />
         <activity android:name=".EditAnimalActivity" android:exported="false" />
-        <activity android:name=".AdoptionActivity" android:exported="false" />
-        <activity android:name=".AdoptionApplicationActivity" android:exported="false" />
+        <activity android:name=".AdoptionFormActivity" android:exported="false" />
         <activity android:name=".AdoptionApplicationDetailsActivity" android:exported="false" />
         <activity android:name=".NotificationsActivity" android:exported="false" />
         <activity android:name=".ChatActivity" android:exported="false" />
+        <activity android:name=".VolunteerFormActivity" android:exported="false" />
+        <activity android:name=".VolunteerApplicationDetailsActivity" android:exported="false" />
+        <activity android:name=".ApplicationsListActivity" android:exported="false" />
+
 
         <meta-data
             android:name="com.google.android.gms.version"

@@ -20,7 +20,6 @@ import androidx.gridlayout.widget.GridLayout;
 
 import com.bumptech.glide.Glide;
 import com.example.adapostapp.utils.UserUtils;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -31,8 +30,7 @@ import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-public class ListAnimalActivity extends AppCompatActivity {
-    private BottomNavigationView bottomNavigationView;
+public class ListAnimalActivity extends BaseActivity {
     private ImageButton buttonBackToMain;
     private GridLayout gridLayout;
     private LinearLayout linearLayout;
@@ -48,7 +46,6 @@ public class ListAnimalActivity extends AppCompatActivity {
         setContentView(R.layout.activity_list_animal);
 
         buttonBackToMain = findViewById(R.id.buttonBackToMain);
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
         gridLayout = findViewById(R.id.GridLayout);
         linearLayout = findViewById(R.id.linearLayout);
         noneFavoriteTextView = findViewById(R.id.textViewEmpty);
@@ -56,93 +53,17 @@ public class ListAnimalActivity extends AppCompatActivity {
 
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
 
-        bottomNavigationView.setSelectedItemId(R.id.navigation_animals);
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(ListAnimalActivity.this, MainActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_favorites) {
-                startActivity(new Intent(ListAnimalActivity.this, FavoritesActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(ListAnimalActivity.this, ChatListActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_animals) {
-                return true;
-            } else if (itemId == R.id.navigation_profile) {
-                startActivity(new Intent(ListAnimalActivity.this, ProfileActivity.class));
-                return true;
-            }
-            return false;
-        });
-
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
-        if (user == null) {
-            readAnimalsFromDB("user");
-        }else{
-            checkUserRole();
-        }
+
+        setupBottomNavigation(R.id.navigation_animals);
+        readAnimalsFromDB(getUserRole());
     }
 
-    private void checkUserRole() {
-        progressBar.setVisibility(View.VISIBLE);
-        UserUtils.checkUserRole(user, new UserUtils.UserRoleCallback() {
-            @Override
-            public void onRoleRetrieved(String role) {
-                readAnimalsFromDB(role);
-//                db.collection("Animals")
-//                        .get()
-//                        .addOnSuccessListener(queryDocumentSnapshots -> {
-//                            if (queryDocumentSnapshots.isEmpty()) {
-//                                Log.d("Firebase", "Nu au fost găsite animale.");
-//                                noneFavoriteTextView.setVisibility(View.VISIBLE);
-//                            } else {
-//                                gridLayout.removeAllViews();
-//                                linearLayout.removeAllViews();
-//
-//                                for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-//                                    Animal animal = document.toObject(Animal.class);
-//                                    if ("admin".equals(role)) {
-//                                        addCardToUIAdmin(animal);
-//                                    } else {
-//                                        if (!animal.isAdopted()) {
-//                                            addAnimalCardToUI(animal);
-//                                        }
-//                                    }
-//                                }
-//
-//                            }
-//                            // Adăugăm butonul doar dacă utilizatorul este admin
-//                            if ("admin".equals(role)) {
-//                                View itemView = LayoutInflater.from(ListAnimalActivity.this)
-//                                        .inflate(R.layout.add_animal, linearLayout, false);
-//
-//                                itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
-//                                    Intent intent = new Intent(ListAnimalActivity.this, AddAnimalActivity.class);
-//                                    startActivity(intent);
-//                                });
-//                                Log.d("Firebase", "Utilizatorul este admin. Se afișează butonul de adăugare.");
-//                                linearLayout.addView(itemView);
-//                            }
-//                            progressBar.setVisibility(View.GONE);
-//                        })
-//                        .addOnFailureListener(e -> {
-//                            Log.w("Firebase", "Eroare la preluarea datelor", e);
-//                            Toast.makeText(ListAnimalActivity.this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
-//                            noneFavoriteTextView.setVisibility(View.VISIBLE);
-//                            progressBar.setVisibility(View.GONE);
-//                        });
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Log.w("Firebase", "Eroare la obținerea rolului utilizatorului.", e);
-                progressBar.setVisibility(View.GONE);
-            }
-        });
+    @Override
+    protected int getSelectedItemId() {
+        return R.id.navigation_animals;
     }
 
     private void readAnimalsFromDB(String role) {
@@ -166,7 +87,6 @@ public class ListAnimalActivity extends AppCompatActivity {
                                 }
                             }
                         }
-
                     }
                     // Adăugăm butonul doar dacă utilizatorul este admin
                     if ("admin".equals(role)) {
@@ -190,7 +110,6 @@ public class ListAnimalActivity extends AppCompatActivity {
                 });
     }
 
-
     private void addAnimalCardToUI(Animal animal) {
         View itemView = LayoutInflater.from(this).inflate(R.layout.card_item, gridLayout, false);
         itemView.findViewById(R.id.imageButtonFavorite).setVisibility(View.GONE);
@@ -208,7 +127,6 @@ public class ListAnimalActivity extends AppCompatActivity {
         animalBreed.setText(animal.getBreed());
         animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
 
-
         if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
             Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
         }
@@ -223,7 +141,6 @@ public class ListAnimalActivity extends AppCompatActivity {
         itemView.setOnClickListener(v -> {
             Intent intent = new Intent(this, AnimalProfileActivity.class);
             intent.putExtra("animal", animal.getId());
-//            intent.putExtra("favorite", "favorite");
             startActivity(intent);
         });
 
@@ -247,12 +164,17 @@ public class ListAnimalActivity extends AppCompatActivity {
         animalName.setText(animal.getName());
         animalBreed.setText(animal.getBreed());
         animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani") +
-                 " si " + animal.getMonths() + (animal.getMonths() == 1 ? " luna" : " luni"));
+                " si " + animal.getMonths() + (animal.getMonths() == 1 ? " luna" : " luni"));
         animalAdoptedStatus.setText(animal.isAdopted() ? "Adoptat" : "Disponibil");
 
-        if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
-            Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
+        if (!isFinishing() && !isDestroyed()) {
+            if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
+                Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
+            }
+        } else {
+            Log.w("ListAnimalActivity", "Activitatea este distrusă, nu încarcăm imaginea pentru " + animal.getName());
         }
+
         imageEdit.setOnClickListener(v -> {
             Intent intent = new Intent(this, EditAnimalActivity.class);
             intent.putExtra("animal", animal.getId());
@@ -269,12 +191,11 @@ public class ListAnimalActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Adaugă cardul la GridLayout
+        // Adaugă cardul la LinearLayout
         linearLayout.addView(itemView);
     }
 
     private void showDeleteConfirmationDialog(String Id) {
-        // Creează un dialog de confirmare
         new AlertDialog.Builder(this)
                 .setTitle("Ștergere animal din baza de date")
                 .setMessage("Ești sigur că vrei să ștergi acest animal din baza de date?")
@@ -282,7 +203,6 @@ public class ListAnimalActivity extends AppCompatActivity {
                     deleteAnimalAndImage(Id);
                 })
                 .setNegativeButton("Anulează", (dialog, which) -> {
-                    // Închide dialogul fără nicio acțiune
                     dialog.dismiss();
                 })
                 .show();
@@ -291,31 +211,26 @@ public class ListAnimalActivity extends AppCompatActivity {
     private void deleteAnimalAndImage(String animalId) {
         FirebaseStorage storage = FirebaseStorage.getInstance();
 
-        // Obținem documentul animalului din Firestore pentru a lua URL-ul imaginii
         db.collection("Animals")
                 .document(animalId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String imageUrl = documentSnapshot.getString("photo");
-                        Log.d("Firebase", "URL-ul imaginii: " + imageUrl); // Afișează URL-ul imaginii în Logcat
+                        Log.d("Firebase", "URL-ul imaginii: " + imageUrl);
                         if (imageUrl != null && !imageUrl.isEmpty()) {
-                            // Extragem numele fișierului din URL
                             Uri uri = Uri.parse(imageUrl);
-                            String fileName = uri.getLastPathSegment(); // Obținem doar numele fișierului
-
-                            // Creăm referința către imagine în Firebase Storage
+                            String fileName = uri.getLastPathSegment();
                             StorageReference imageRef = storage.getReference().child(fileName);
 
-                            // Ștergem imaginea
                             imageRef.delete()
                                     .addOnSuccessListener(aVoid -> {
                                         Log.d("Firebase", "Imaginea a fost ștearsă cu succes.");
-                                        removeAnimalFromFavorites(animalId); // După ștergerea imaginii, eliminăm animalul din Firestore și favorite
+                                        removeAnimalFromFavorites(animalId);
                                     })
                                     .addOnFailureListener(e -> Log.w("Firebase", "Eroare la ștergerea imaginii.", e));
                         } else {
-                            removeAnimalFromFavorites(animalId); // Dacă nu există imagine, ștergem doar animalul
+                            removeAnimalFromFavorites(animalId);
                         }
                     } else {
                         Log.d("Firebase", "Animalul nu există în Firestore.");
@@ -340,7 +255,7 @@ public class ListAnimalActivity extends AppCompatActivity {
                     batch.commit()
                             .addOnSuccessListener(aVoid -> {
                                 Log.d("Firebase", "Animalul a fost eliminat din favorite.");
-                                deleteAnimalAndApplications(animalId); // După ce eliminăm din favorite, ștergem animalul și cererile de adopție
+                                deleteAnimalAndApplications(animalId);
                             })
                             .addOnFailureListener(e -> Log.w("Firebase", "Eroare la actualizarea listei de favorite.", e));
                 })
@@ -351,11 +266,9 @@ public class ListAnimalActivity extends AppCompatActivity {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         WriteBatch batch = db.batch();
 
-        // Referința către documentul animalului
         DocumentReference animalRef = db.collection("Animals").document(animalId);
         batch.delete(animalRef);
 
-        // Găsirea și ștergerea cererilor de adopție asociate
         db.collection("AdoptionApplications")
                 .whereEqualTo("animalId", animalId)
                 .get()
@@ -365,16 +278,13 @@ public class ListAnimalActivity extends AppCompatActivity {
                         batch.delete(applicationRef);
                     }
 
-                    // Execută batch-ul pentru a șterge atât animalul, cât și cererile de adopție
                     batch.commit()
                             .addOnSuccessListener(aVoid -> {
-                                readAnimalsFromDB("admin"); // Actualizează UI-ul după ștergere
+                                readAnimalsFromDB("admin"); // Actualizăm UI-ul doar dacă rolul este "admin"
                                 Log.d("Firebase", "Animalul și cererile de adopție au fost șterse din Firestore.");
                             })
                             .addOnFailureListener(e -> Log.w("Firebase", "Eroare la ștergerea datelor.", e));
                 })
                 .addOnFailureListener(e -> Log.w("Firebase", "Eroare la preluarea cererilor de adopție.", e));
     }
-
-
 }

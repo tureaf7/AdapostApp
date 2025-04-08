@@ -74,4 +74,5 @@
         <item name="android:background">@drawable/spinner_background</item> <!-- Fundal spinner -->
     </style>
 
+
 </resources>

@@ -18,13 +18,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.concurrent.atomic.AtomicReference;
-
-public class AdoptionActivity extends AppCompatActivity {
+public class AdoptionFormActivity extends AppCompatActivity {
     private EditText numar_telefon, adresa, animale_precedente_detalii, animal_curent_specie, animal_curent_varsta,
             animal_curent_temperament, grija_animal, grija_animal_vacanta, animal_probleme_sanatate, mesaj_adapost;
     private RadioGroup animale_precedente, animal_curent, animale_adoptate, locuinta, chirie, permisiune_proprietare_chirie, alergie;
@@ -42,7 +39,7 @@ public class AdoptionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_adoption);
+        setContentView(R.layout.activity_adoption_form);
         animalId = getIntent().getStringExtra("animal");
 
         db = FirebaseFirestore.getInstance();

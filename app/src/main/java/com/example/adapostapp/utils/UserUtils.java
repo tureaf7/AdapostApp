@@ -1,4 +1,8 @@
 package com.example.adapostapp.utils;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+
 import com.example.adapostapp.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -55,20 +59,27 @@ public class UserUtils {
     }
 
     // Verifică rolul utilizatorului
-    public static void checkUserRole(FirebaseUser user, final UserRoleCallback callback) {
-        db.collection("users")
+    public static void checkUserRole(FirebaseUser user, UserRoleCallback callback) {
+        FirebaseFirestore.getInstance()
+                .collection("users")
                 .document(user.getUid())
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String role = documentSnapshot.getString("role");
+                    String role = documentSnapshot.getString("role");
+                    if (role != null) {
                         callback.onRoleRetrieved(role);
                     } else {
-                        callback.onError(new Exception("Rolul nu a fost găsit"));
+                        callback.onError(new Exception("Rolul nu a fost găsit."));
                     }
                 })
                 .addOnFailureListener(callback::onError);
     }
+
+    public static String getSavedRole(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString("user_role", null);
+    }
+
 
     // Callback-uri pentru fiecare funcție
     public interface UserExistCallback {

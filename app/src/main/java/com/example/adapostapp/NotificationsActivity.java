@@ -2,20 +2,20 @@ package com.example.adapostapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -27,14 +27,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class NotificationsActivity extends AppCompatActivity implements NotificationAdapter.OnNotificationClickListener {
+public class NotificationsActivity extends BaseActivity implements NotificationAdapter.OnNotificationClickListener {
     private RecyclerView recyclerViewNotifications;
     private ProgressBar progressBar;
     private TextView textViewEmpty;
     private ImageButton backButton;
     private NotificationAdapter adapter;
     private List<Notification> notifications;
-    private BottomNavigationView bottomNavigationView;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
 
@@ -48,49 +47,34 @@ public class NotificationsActivity extends AppCompatActivity implements Notifica
         textViewEmpty = findViewById(R.id.textViewEmpty);
         backButton = findViewById(R.id.buttonBackToMain);
         notifications = new ArrayList<>();
-        adapter = new NotificationAdapter(notifications, this); // Trece this ca listener
+        adapter = new NotificationAdapter(notifications, this);
         recyclerViewNotifications.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewNotifications.setAdapter(adapter);
 
         backButton.setOnClickListener(v -> onBackPressed());
 
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(this, MainActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_favorites) {
-                startActivity(new Intent(this, FavoritesActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(this, ChatListActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_animals) {
-                startActivity(new Intent(this, ListAnimalActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                return true;
-            }
-            return false;
-        });
-
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-
+        setupBottomNavigation(R.id.navigation_notifications);
         loadNotifications();
+    }
+
+    @Override
+    protected int getSelectedItemId() {
+        return R.id.navigation_notifications;
     }
 
     private void loadNotifications() {
         if (auth.getCurrentUser() == null) {
             Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            finish();
             return;
         }
 
         String userId = auth.getCurrentUser().getUid();
         progressBar.setVisibility(View.VISIBLE);
         textViewEmpty.setVisibility(View.GONE);
+
         db.collection("Notifications")
                 .whereEqualTo("userId", userId)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
@@ -100,61 +84,102 @@ public class NotificationsActivity extends AppCompatActivity implements Notifica
                         Toast.makeText(this, "Eroare la încărcarea notificărilor!", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    notifications.clear();
-                    for (var doc : value) {
-                        Notification notification = doc.toObject(Notification.class);
-                        notifications.add(notification);
+                    if (value != null) {
+                        notifications.clear();
+                        for (QueryDocumentSnapshot doc : value) {
+                            Notification notification = doc.toObject(Notification.class);
+                            notification.setId(doc.getId()); // Setează ID-ul notificării
+                            notifications.add(notification);
+                        }
+                        textViewEmpty.setVisibility(notifications.isEmpty() ? View.VISIBLE : View.GONE);
+                        adapter.notifyDataSetChanged();
                     }
-                    if (notifications.isEmpty()) {
-                        textViewEmpty.setVisibility(View.VISIBLE);
-                    } else {
-                        textViewEmpty.setVisibility(View.GONE);
-                    }
-                    adapter.notifyDataSetChanged();
                 });
     }
 
     @Override
     public void onNotificationClick(Notification notification) {
+        String type = notification.getType();
         String applicationId = notification.getApplicationId();
-        if (applicationId == null || applicationId.isEmpty()) {
-            Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
-            return;
+        String notificationId = notification.getId();
+
+        // Marchează notificarea ca vizualizată
+        if (!notification.isViewed() && notificationId != null) {
+            db.collection("Notifications")
+                    .document(notificationId)
+                    .update("viewed", true)
+                    .addOnSuccessListener(aVoid -> {
+                        adapter.notifyDataSetChanged();
+                        Log.d("NotificationsActivity", "Notificare vizualizată cu succes!");
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Eroare la marcarea notificării!", Toast.LENGTH_SHORT).show();
+                        Log.e("NotificationsActivity", "Eroare la marcarea notificării:", e);
+                    });
         }
 
-        // Preia animalId din AdoptionApplications
-        db.collection("AdoptionApplications")
-                .document(applicationId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String animalId = documentSnapshot.getString("animalId");
-                        if (animalId != null && !animalId.isEmpty()) {
-                            // Redirecționează către AnimalProfileActivity cu animalId
-                            Intent intent = new Intent(NotificationsActivity.this, AnimalProfileActivity.class);
-                            intent.putExtra("animal", animalId);
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(this, "Animalul asociat nu a fost găsit!", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Eroare la preluarea cererii!", Toast.LENGTH_SHORT).show();
-                });
+        switch (type) {
+            case "APPROVAL":
+            case "REJECTION":
+                if (applicationId == null) {
+                    Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                db.collection("AdoptionApplications")
+                        .document(applicationId)
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                String animalId = documentSnapshot.getString("animalId");
+                                if (animalId != null && !animalId.isEmpty()) {
+                                    Intent intent = new Intent(NotificationsActivity.this, AnimalProfileActivity.class);
+                                    intent.putExtra("animal", animalId);
+                                    startActivity(intent);
+                                } else {
+                                    Toast.makeText(this, "Animalul asociat nu a fost găsit!", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(this, "Eroare la preluarea cererii!", Toast.LENGTH_SHORT).show());
+                break;
+
+            case "VOLUNTEER_APPROVAL":
+            case "VOLUNTEER_REJECTION":
+                Intent intent = new Intent(this, ApplicationsListActivity.class);
+                if (applicationId != null) {
+                    intent.putExtra("volunteerApplication", applicationId);
+                }
+                startActivity(intent);
+                break;
+
+            case "NEW_APPLICATION":
+            case "NEW_VOLUNTEER_REQUEST":
+                intent = new Intent(this, type.equals("NEW_APPLICATION") ? AdoptionApplicationDetailsActivity.class : ApplicationsListActivity.class);
+                if (applicationId != null) {
+                    intent.putExtra(type.equals("NEW_APPLICATION") ? "applicationId" : "volunteerApplication", applicationId);
+                }
+                startActivity(intent);
+                break;
+
+            default:
+                Toast.makeText(this, "Acțiune necunoscută pentru această notificare!", Toast.LENGTH_SHORT).show();
+                break;
+        }
     }
 }
 
 // Clasa model pentru notificare
 class Notification {
+    private String id; // ID-ul documentului din Firestore
     private String userId;
     private String title;
     private String body;
     private Date timestamp;
     private String type;
     private String applicationId;
+    private boolean viewed;
 
     public Notification() {}
 
@@ -165,9 +190,11 @@ class Notification {
         this.timestamp = timestamp;
         this.type = type;
         this.applicationId = applicationId;
+        this.viewed = false; // Implicit nevizualizat
     }
 
-    // Getters și setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
     public String getTitle() { return title; }
@@ -180,6 +207,8 @@ class Notification {
     public void setType(String type) { this.type = type; }
     public String getApplicationId() { return applicationId; }
     public void setApplicationId(String applicationId) { this.applicationId = applicationId; }
+    public boolean isViewed() { return viewed; }
+    public void setViewed(boolean viewed) { this.viewed = viewed; }
 }
 
 // Adaptor pentru RecyclerView
@@ -187,7 +216,6 @@ class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.Notif
     private List<Notification> notifications;
     private OnNotificationClickListener onNotificationClickListener;
 
-    // Interfață pentru gestionarea click-urilor
     public interface OnNotificationClickListener {
         void onNotificationClick(Notification notification);
     }
@@ -210,9 +238,12 @@ class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.Notif
         holder.textViewTitle.setText(notification.getTitle());
         holder.textViewBody.setText(notification.getBody());
         SimpleDateFormat dateFormat = new SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault());
-        holder.textViewTimestamp.setText(dateFormat.format(notification.getTimestamp()));
+        holder.textViewTimestamp.setText(notification.getTimestamp() != null ? dateFormat.format(notification.getTimestamp()) : "N/A");
 
-        // Adaugă listener de click pe element
+        // Schimbă aspectul dacă notificarea este nevizualizată
+        holder.imageView.setAlpha(notification.isViewed() ? 0.7f : 1.0f);
+        holder.imageView.setVisibility(notification.isViewed() ? View.GONE : View.VISIBLE);
+
         holder.itemView.setOnClickListener(v -> {
             if (onNotificationClickListener != null) {
                 onNotificationClickListener.onNotificationClick(notification);
@@ -227,12 +258,14 @@ class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.Notif
 
     static class NotificationViewHolder extends RecyclerView.ViewHolder {
         TextView textViewTitle, textViewBody, textViewTimestamp;
+        ImageView imageView;
 
         public NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewTitle = itemView.findViewById(R.id.textViewTitle);
             textViewBody = itemView.findViewById(R.id.textViewBody);
             textViewTimestamp = itemView.findViewById(R.id.textViewTimestamp);
+            imageView = itemView.findViewById(R.id.imageView);
         }
     }
 }

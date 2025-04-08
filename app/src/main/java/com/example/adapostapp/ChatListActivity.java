@@ -6,12 +6,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -24,10 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ChatListActivity extends AppCompatActivity implements ChatListAdapter.OnChatClickListener {
+public class ChatListActivity extends BaseActivity implements ChatListAdapter.OnChatClickListener {
     private RecyclerView recyclerViewChatList;
     private AutoCompleteTextView searchAutoComplete;
-    private BottomNavigationView bottomNavigationView;
     private ProgressBar progressBar;
     private ListenerRegistration chatsListener;
     private TextView textViewEmpty;
@@ -39,49 +41,27 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
     private FirebaseAuth auth;
     private FirebaseUser firebaseUser;
     private String currentUserId;
+    private ImageButton buttonBackToMain;
     private boolean isAdmin = false;
-    private static final String PREFS_NAME = "AdapostAppPrefs";
-    private static final String KEY_HAS_UNREAD_MESSAGES = "hasUnreadMessages";
-    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_list);
-        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        bottomNavigationView.setSelectedItemId(R.id.navigation_messages);
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(this, MainActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_favorites) {
-                startActivity(new Intent(this, FavoritesActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_messages) {
-                return true;
-            } else if (itemId == R.id.navigation_animals) {
-                startActivity(new Intent(this, ListAnimalActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                return true;
-            }
-            return false;
-        });
 
         recyclerViewChatList = findViewById(R.id.recyclerViewChatList);
         searchAutoComplete = findViewById(R.id.searchAutoComplete);
         progressBar = findViewById(R.id.progressBar);
         textViewEmpty = findViewById(R.id.textViewEmpty);
+        buttonBackToMain = findViewById(R.id.buttonBackToMain);
         chats = new ArrayList<>();
         usersList = new ArrayList<>();
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         firebaseUser = auth.getCurrentUser();
+
+        setupBottomNavigation(R.id.navigation_messages);
 
         if (firebaseUser == null) {
             Toast.makeText(this, "Utilizatorul nu este autentificat!", Toast.LENGTH_SHORT).show();
@@ -92,7 +72,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         } else {
             currentUserId = firebaseUser.getUid();
             Log.d("ChatListActivity", "Current user ID: " + currentUserId);
-            saveFcmToken();
+            saveFcmToken(currentUserId);
         }
 
         adapter = new ChatListAdapter(chats, this, currentUserId);
@@ -112,36 +92,37 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
             }
         });
 
+        buttonBackToMain.setOnClickListener(v -> onBackPressed());
+
         progressBar.setVisibility(View.VISIBLE);
         textViewEmpty.setVisibility(View.GONE);
-        db.collection("users").document(currentUserId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String role = documentSnapshot.getString("role");
-                        isAdmin = "admin".equals(role);
-                        setupUI();
-                    } else {
-                        progressBar.setVisibility(View.GONE);
-                        Toast.makeText(this, "Eroare: Utilizatorul nu există!", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Eroare la verificarea rolului!", Toast.LENGTH_SHORT).show();
-                    Log.e("ChatListActivity", "Eroare la verificarea rolului!", e);
-                });
-
-        updateMessagesIcon(sharedPreferences.getBoolean(KEY_HAS_UNREAD_MESSAGES, false));
+//        db.collection("users").document(currentUserId)
+//                .get()
+//                .addOnSuccessListener(documentSnapshot -> {
+//                    if (documentSnapshot.exists()) {
+//                        String role = documentSnapshot.getString("role");
+//                        isAdmin = "admin".equals(role);
+//                        setupUI();
+//                    } else {
+//                        progressBar.setVisibility(View.GONE);
+//                        Toast.makeText(this, "Eroare: Utilizatorul nu există!", Toast.LENGTH_SHORT).show();
+//                    }
+//                })
+//                .addOnFailureListener(e -> {
+//                    progressBar.setVisibility(View.GONE);
+//                    Toast.makeText(this, "Eroare la verificarea rolului!", Toast.LENGTH_SHORT).show();
+//                    Log.e("ChatListActivity", "Eroare la verificarea rolului!", e);
+//                });
+        setupUI();
     }
 
-    private void updateMessagesIcon(boolean hasUnreadMessages) {
-        int iconResId = hasUnreadMessages ? R.drawable.ic_message_red : R.drawable.ic_message;
-        bottomNavigationView.getMenu().findItem(R.id.navigation_messages).setIcon(iconResId);
+    @Override
+    protected int getSelectedItemId() {
+        return R.id.navigation_messages;
     }
 
     private void setupUI() {
-        String role = isAdmin ? "user" : "admin";
+        String role = isAdmin() ? "user" : "admin";
         loadUsers(role);
         loadChats();
     }
@@ -250,16 +231,6 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         db.collection("users").document(otherUserId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    String photoUrl = null;
-                    String name = "";
-                    if (documentSnapshot.exists()) {
-                        name = documentSnapshot.getString("name");
-                        photoUrl = documentSnapshot.getString("profileImageUrl");
-                        Log.d("ChatListActivity", "Profile image URL for user " + otherUserId + ": " + photoUrl);
-                    } else {
-                        Log.w("ChatListActivity", "Utilizatorul " + otherUserId + " nu există în Firestore");
-                    }
-
                     // Creează intent-ul și trece photoUrl
                     Intent intent = new Intent(this, ChatActivity.class);
                     intent.putExtra("chatId", chat.getChatId());
@@ -276,19 +247,5 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
                 });
     }
 
-    private void saveFcmToken() {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        Log.w("ChatListActivity", "Eroare la obținerea token-ului FCM", task.getException());
-                        return;
-                    }
 
-                    String token = task.getResult();
-                    db.collection("users").document(currentUserId)
-                            .update("fcmToken", token)
-                            .addOnSuccessListener(aVoid -> Log.d("ChatListActivity", "Token FCM salvat: " + token))
-                            .addOnFailureListener(e -> Log.e("ChatListActivity", "Eroare la salvarea token-ului FCM", e));
-                });
-    }
 }

@@ -268,7 +268,7 @@
                     android:textSize="16sp" />
 
                 <TextView
-                    android:id="@+id/user_have_pets_before"
+                    android:id="@+id/experienceAnswer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="[Da/Nu]"
@@ -573,7 +573,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:visibility="gone">
+                    android:visibility="gone"
+                    tools:visibility="visible">
 
                     <TextView
                         android:id="@+id/applicationStatusAproved"
@@ -581,7 +582,8 @@
                         android:layout_height="wrap_content"
                         android:text="Aprobat"
                         android:textColor="@color/turcoaz"
-                        android:visibility="gone" />
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
                     <TextView
                         android:id="@+id/applicationStatusRejected"
@@ -589,7 +591,8 @@
                         android:layout_height="wrap_content"
                         android:text="Respins"
                         android:textColor="@android:color/holo_red_dark"
-                        android:visibility="gone" />
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
                     <TextView
                         android:id="@+id/adminName"
@@ -621,5 +624,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_navigation_menu" />
+        app:menu="@menu/bottom_navigation_menu"
+         />
 </RelativeLayout>

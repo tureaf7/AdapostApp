@@ -76,7 +76,8 @@ exports.sendAdoptionNotification = onDocumentUpdated('AdoptionApplications/{appl
                 body: payload.notification.body,
                 timestamp: Timestamp.fromDate(new Date()),
                 type: notificationType,
-                applicationId: applicationId
+                applicationId: applicationId,
+                viewed: false
             };
 
             return Promise.all([
@@ -91,6 +92,95 @@ exports.sendAdoptionNotification = onDocumentUpdated('AdoptionApplications/{appl
             console.error('Error fetching documents:', error);
             return null;
         });
+    }
+    return null;
+});
+
+// Funcția pentru notificări la actualizarea cererilor de voluntariat
+exports.sendVolunteerNotification = onDocumentUpdated('VolunteerRequests/{applicationId}', (event) => {
+    const newValue = event.data.after.data();
+    const previousValue = event.data.before.data();
+
+    // Verifică dacă statusul s-a schimbat
+    if (newValue.status !== previousValue.status) {
+        const userId = newValue.userId;
+        const applicationId = event.params.applicationId;
+
+        // Preia datele utilizatorului
+        return db.collection('users').doc(userId).get()
+            .then((userDoc) => {
+                if (!userDoc.exists) {
+                    console.log('User document not found for userId:', userId);
+                    return null;
+                }
+
+                const fcmToken = userDoc.data().fcmToken;
+                const userName = userDoc.data().name || 'Utilizator';
+
+                if (!fcmToken) {
+                    console.log('No FCM token for user:', userId);
+                    return null;
+                }
+
+                let payload;
+                let notificationType;
+                if (newValue.status === 'Aprobat') {
+                    payload = {
+                        notification: {
+                            title: 'Cerere aprobată!',
+                            body: `Cererea ta de voluntariat a fost aprobată, ${userName}!`,
+                        },
+                        data: {
+                            click_action: 'VOLUNTEER_APPROVAL_ACTIVITY',
+                            applicationId: applicationId
+                        },
+                        token: fcmToken
+                    };
+                    notificationType = 'VOLUNTEER_APPROVAL';
+                } else if (newValue.status === 'Respins') {
+                    payload = {
+                        notification: {
+                            title: 'Cerere respinsă',
+                            body: `Ne pare rău, cererea ta de voluntariat a fost respinsă, ${userName}.`,
+                        },
+                        data: {
+                            click_action: 'VOLUNTEER_REJECTION_ACTIVITY',
+                            applicationId: applicationId
+                        },
+                        token: fcmToken
+                    };
+                    notificationType = 'VOLUNTEER_REJECTION';
+                } else {
+                    console.log('Status not relevant for notification:', newValue.status);
+                    return null;
+                }
+
+                // Salvează notificarea în colecția Notifications
+                const notificationDoc = {
+                    userId: userId,
+                    title: payload.notification.title,
+                    body: payload.notification.body,
+                    timestamp: Timestamp.fromDate(new Date()),
+                    type: notificationType,
+                    applicationId: applicationId,
+                    viewed: false
+                };
+
+                return Promise.all([
+                    messaging.send(payload),
+                    db.collection('Notifications').add(notificationDoc)
+                ])
+                    .then(([_, docRef]) => {
+                        console.log(`Notification sent to user ${userId} for status: ${newValue.status}, saved as ${docRef.id}`);
+                    })
+                    .catch(error => {
+                        console.error('Error sending notification or saving to Firestore:', error);
+                    });
+            })
+            .catch(error => {
+                console.error('Error fetching user document:', error);
+                return null;
+            });
     }
     return null;
 });
@@ -143,7 +233,8 @@ exports.notifyAdminsOnNewApplication = onDocumentCreated('AdoptionApplications/{
                 body: payload.notification.body,
                 timestamp: Timestamp.fromDate(new Date()),
                 type: 'NEW_APPLICATION',
-                applicationId: applicationId
+                applicationId: applicationId,
+                viewed: false
             };
 
             return Promise.all([
@@ -268,4 +359,76 @@ exports.sendChatNotification = onDocumentCreated('Chats/{chatId}/Messages/{messa
         console.error('Error in sendChatNotification:', error);
         return null;
     }
+});
+
+exports.notifyAdminsOnNewVolunteerRequest = onDocumentCreated('VolunteerRequests/{requestId}', (event) => {
+    const request = event.data.data();
+    const userId = request.userId;
+    const requestId = event.params.requestId;
+
+    // Preia datele utilizatorului și lista adminilor
+    return Promise.all([
+        db.collection('users').doc(userId).get(),
+        db.collection('users').where('role', '==', 'admin').get()
+    ])
+        .then(([userDoc, adminSnapshot]) => {
+            if (!userDoc.exists) {
+                console.log('User document not found for userId:', userId);
+                return null;
+            }
+
+            const userName = userDoc.data().name || 'Utilizator necunoscut';
+
+            // Creează notificări pentru fiecare admin
+            const adminNotifications = adminSnapshot.docs.map(adminDoc => {
+                const adminFcmToken = adminDoc.data().fcmToken;
+                const adminId = adminDoc.id;
+
+                if (!adminFcmToken) {
+                    console.log(`No FCM token for admin: ${adminId}`);
+                    return Promise.resolve();
+                }
+
+                const payload = {
+                    notification: {
+                        title: 'Cerere de voluntariat nouă!',
+                        body: `${userName} a trimis o cerere de voluntariat.`,
+                    },
+                    data: {
+                        click_action: 'NEW_VOLUNTEER_REQUEST_ACTIVITY',
+                        requestId: requestId
+                    },
+                    token: adminFcmToken
+                };
+
+                // Salvează notificarea în colecția Notifications pentru admin
+                const notificationDoc = {
+                    userId: adminId,
+                    title: payload.notification.title,
+                    body: payload.notification.body,
+                    timestamp: Timestamp.fromDate(new Date()),
+                    type: 'NEW_VOLUNTEER_REQUEST',
+                    requestId: requestId,
+                    viewed: false
+                };
+
+                return Promise.all([
+                    messaging.send(payload),
+                    db.collection('Notifications').add(notificationDoc)
+                ])
+                    .then(([_, docRef]) => {
+                        console.log(`Notification sent to admin ${adminId}, saved as ${docRef.id}`);
+                    })
+                    .catch(error => {
+                        console.error(`Error sending notification to admin ${adminId} or saving to Firestore:`, error);
+                    });
+            });
+
+            // Așteaptă finalizarea tuturor notificărilor
+            return Promise.all(adminNotifications);
+        })
+        .catch(error => {
+            console.error('Error processing new volunteer request notification:', error);
+            return null;
+        });
 });

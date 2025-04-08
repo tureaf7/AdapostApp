@@ -30,9 +30,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FavoritesActivity extends AppCompatActivity {
-
-    private BottomNavigationView bottomNavigationView;
+public class FavoritesActivity extends BaseActivity {
     private ImageButton buttonBackToMain;
     private GridLayout gridLayout;
     private FirebaseFirestore db;
@@ -48,34 +46,12 @@ public class FavoritesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_favorites);
 
         buttonBackToMain = findViewById(R.id.buttonBackToMain);
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
         gridLayout = findViewById(R.id.GridLayout);
         progressBar = findViewById(R.id.progressBar);
         noneFavoriteTextView = findViewById(R.id.textViewEmpty);
         scrollView = findViewById(R.id.ScrollView);
-
+setupBottomNavigation(R.id.navigation_favorites);
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
-
-        bottomNavigationView.setSelectedItemId(R.id.navigation_favorites);
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.navigation_home) {
-                startActivity(new Intent(FavoritesActivity.this, MainActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_favorites) {
-                return true;
-            } else if (itemId == R.id.navigation_messages) {
-                startActivity(new Intent(FavoritesActivity.this, ChatListActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_animals) {
-                startActivity(new Intent(FavoritesActivity.this, ListAnimalActivity.class));
-                return true;
-            } else if (itemId == R.id.navigation_profile) {
-                startActivity(new Intent(FavoritesActivity.this, ProfileActivity.class));
-                return true;
-            }
-            return false;
-        });
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
@@ -87,6 +63,10 @@ public class FavoritesActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected int getSelectedItemId() {
+        return R.id.navigation_favorites;
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -166,9 +146,6 @@ public class FavoritesActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                 });
     }
-
-
-
 
     private void addAnimalCardToUI(Animal animal) {
         // Crează cardul pentru animal
