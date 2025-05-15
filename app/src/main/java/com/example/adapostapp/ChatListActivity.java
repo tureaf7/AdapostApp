@@ -41,8 +41,6 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
     private FirebaseAuth auth;
     private FirebaseUser firebaseUser;
     private String currentUserId;
-    private ImageButton buttonBackToMain;
-    private boolean isAdmin = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +51,7 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
         searchAutoComplete = findViewById(R.id.searchAutoComplete);
         progressBar = findViewById(R.id.progressBar);
         textViewEmpty = findViewById(R.id.textViewEmpty);
-        buttonBackToMain = findViewById(R.id.buttonBackToMain);
+        ImageButton buttonBackToMain = findViewById(R.id.buttonBackToMain);
         chats = new ArrayList<>();
         usersList = new ArrayList<>();
 
@@ -96,29 +94,18 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
 
         progressBar.setVisibility(View.VISIBLE);
         textViewEmpty.setVisibility(View.GONE);
-//        db.collection("users").document(currentUserId)
-//                .get()
-//                .addOnSuccessListener(documentSnapshot -> {
-//                    if (documentSnapshot.exists()) {
-//                        String role = documentSnapshot.getString("role");
-//                        isAdmin = "admin".equals(role);
-//                        setupUI();
-//                    } else {
-//                        progressBar.setVisibility(View.GONE);
-//                        Toast.makeText(this, "Eroare: Utilizatorul nu există!", Toast.LENGTH_SHORT).show();
-//                    }
-//                })
-//                .addOnFailureListener(e -> {
-//                    progressBar.setVisibility(View.GONE);
-//                    Toast.makeText(this, "Eroare la verificarea rolului!", Toast.LENGTH_SHORT).show();
-//                    Log.e("ChatListActivity", "Eroare la verificarea rolului!", e);
-//                });
-        setupUI();
+//        setupUI();
     }
 
     @Override
     protected int getSelectedItemId() {
         return R.id.navigation_messages;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupUI();
     }
 
     private void setupUI() {

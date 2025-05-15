@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">AdapostApp</string>
     <string name="default_web_client_id">806082907830-45l01u59l17604qb06of3slm7u5rku43.apps.googleusercontent.com</string>
-    <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in or register</string>
@@ -28,4 +27,146 @@
     <string name="grija_animal">Cine va avea grijă de animal zilnic?</string>
     <string name="animale_precedente">Dacă Da: ce animale și pentru cât timp?</string>
     <string name="default_notification_channel_id">default_notification_channel</string>
+
+    <string name="terms_title">Termeni și condiții</string>
+    <string name="adoption_process_title">Procesul de adoptie</string>
+
+    <string name="terms_adoption_description">
+        <![CDATA[
+        <h3>Termeni și condiții pentru adopția unui animal</h3>
+        <h4>1. Eligibilitatea pentru adopție</h4>
+        <ul>
+            <li>Adoptatorul trebuie să aibă vârsta de minimum 18 ani.</li>
+            <li>Adoptatorul trebuie să locuiască într-un mediu adecvat (apartament sau casă) care poate oferi suficient spațiu și siguranță pentru animalul adoptat.</li>
+            <li>Adoptatorul nu trebuie să aibă antecedente legate de maltratarea animalelor.</li>
+        </ul>
+        <h4>2. Responsabilitatea adoptatorului</h4>
+        <ul>
+            <li>Adoptatorul se angajează să asigure îngrijirea adecvată a animalului pe toată durata vieții acestuia, inclusiv hrană, apă, adăpost și îngrijire veterinară.</li>
+            <li>Adoptatorul trebuie să își asume responsabilitatea pentru bunăstarea fizică, emoțională și psihologică a animalului.</li>
+            <li>Adoptatorul trebuie să asigure tratamentele necesare pentru animal, inclusiv vaccinuri, deparazitări, sterilizări și orice alte intervenții recomandate de veterinar.</li>
+        </ul>
+        <h4>3. Îngrijirea veterinară</h4>
+        <ul>
+            <li>Adoptatorul este responsabil pentru efectuarea controalelor veterinare periodice și pentru administrarea tratamentelor specifice, conform recomandărilor medicului veterinar.</li>
+            <li>Adoptatorul trebuie să asigure tratamentele preventive, inclusiv vaccinurile și protecția împotriva paraziților (ex: căpușe, purici).</li>
+        </ul>
+        <h4>4. Întoarcerea animalului</h4>
+        <ul>
+            <li>Dacă, din orice motiv, adoptatorul nu mai poate să aibă grijă de animal, acesta se angajează să returneze animalul adăpostului sau să colaboreze pentru găsirea unei soluții adecvate.</li>
+            <li>Animalul nu va fi predat altor persoane fără acordul prealabil al adăpostului.</li>
+        </ul>
+        <h4>5. Confidențialitatea și datele personale</h4>
+        <p>Adoptatorul este de acord ca informațiile furnizate în procesul de adopție (date personale, informații de contact) să fie păstrate confidențial și utilizate doar pentru scopurile legate de procesul de adopție și monitorizare a animalului.</p>
+        <h4>6. Drepturile adăpostului</h4>
+        <ul>
+            <li>Adăpostul își rezervă dreptul de a verifica bunăstarea animalului în perioada post-adopție, prin vizite sau contact telefonic.</li>
+            <li>În cazul în care se descoperă că animalul nu este îngrijit corespunzător, adăpostul își rezervă dreptul de a solicita întoarcerea acestuia.</li>
+        </ul>
+        <h4>7. Declinarea responsabilității</h4>
+        <ul>
+            <li>Adăpostul nu va fi răspunzător pentru orice prejudicii sau incidente cauzate de animalul adoptat după predarea acestuia către adoptator.</li>
+            <li>Adoptatorul este pe deplin responsabil pentru gestionarea comportamentului și interacțiunilor animalului cu alte persoane sau animale.</li>
+        </ul>
+        <h4>8. Modificarea termenilor</h4>
+        <p>Adăpostul își rezervă dreptul de a modifica acești termeni și condiții oricând, cu notificare prealabilă către adoptatori. Modificările vor fi aplicate numai noilor adopții.</p>
+        ]]>
+    </string>
+    <string name="terms_volunteer_description">
+        <![CDATA[
+        <h3>Termeni și condiții pentru voluntariat</h3>
+        <h4>1. Acceptarea termenilor</h4>
+        <p>Prin completarea și trimiterea cererii de voluntariat, confirmați că ați citit, înțeles și sunteți de acord să respectați acești termeni și condiții, precum și politicile AdapostApp referitoare la protecția datelor și utilizarea aplicației.</p>
+        <h4>2. Condiții de eligibilitate</h4>
+        <ul>
+            <li>Candidații trebuie să aibă vârsta minimă de 18 ani la data depunerii cererii.</li>
+            <li>Candidații trebuie să fie capabili fizic și mental să îndeplinească sarcinile asociate voluntariatului (ex. îngrijirea animalelor, activități administrative).</li>
+            <li>Candidații trebuie să nu aibă antecedente penale relevante pentru activități care implică abuz asupra animalelor sau alte infracțiuni grave.</li>
+        </ul>
+        <h4>3. Responsabilitățile voluntarului</h4>
+        <ul>
+            <li>Să participe la activitățile atribuite de către adăpost (ex. hrănirea animalelor, curățenie, promovarea adopțiilor) conform programului stabilit.</li>
+            <li>Să respecte regulile și procedurile interne ale adăpostului, inclusiv normele de siguranță și bunăstare a animalelor.</li>
+            <li>Să raporteze imediat orice incident sau problemă legată de animale sau echipamente către administratorii AdapostApp.</li>
+            <li>Să mențină confidențialitatea informațiilor sensibile obținute în timpul activității de voluntariat.</li>
+        </ul>
+        <h4>4. Drepturile voluntarului</h4>
+        <ul>
+            <li>Să primească instruire inițială și suport din partea adăpostului pentru activitățile de voluntariat.</li>
+            <li>Să beneficieze de recunoașterea contribuției lor (ex. certificat de voluntariat la finalul perioadei).</li>
+            <li>Să renunțe la statutul de voluntar cu o notificare prealabilă de cel puțin 7 zile, cu excepția cazurilor de urgență.</li>
+        </ul>
+        <h4>5. Procesul de aprobare</h4>
+        <ul>
+            <li>Cererea de voluntariat va fi evaluată de administratorii AdapostApp pe baza informațiilor furnizate (ex. experiență anterioară, motivație).</li>
+            <li>Aprobarea este condiționată de disponibilitatea locurilor și de rezultatul interviului sau evaluării suplimentare organizate de adăpost.</li>
+            <li>Utilizatorii vor fi notificați prin aplicație sau e-mail cu privire la statusul cererii lor.</li>
+        </ul>
+        <h4>6. Protecția datelor personale</h4>
+        <ul>
+            <li>Prin depunerea cererii, acceptați colectarea și prelucrarea datelor personale (nume, adresă, telefon, e-mail) de către AdapostApp, conform GDPR.</li>
+            <li>Datele vor fi utilizate exclusiv pentru gestionarea cererii de voluntariat și activitățile asociate, fiind stocate în siguranță pe serverele Firebase.</li>
+            <li>Aveți dreptul să solicitați accesul, rectificarea sau ștergerea datelor personale prin contactarea administratorilor.</li>
+        </ul>
+        <h4>7. Limitări de răspundere</h4>
+        <ul>
+            <li>AdapostApp și reprezentanții săi nu sunt responsabili pentru accidentele sau rănile suferite de voluntari, cu excepția cazurilor de neglijență gravă.</li>
+            <li>Voluntarii sunt responsabili pentru propriile acte și omisiuni care pot cauza prejudicii animalelor sau altor persoane.</li>
+        </ul>
+        <h4>8. Încetarea voluntariatului</h4>
+        <ul>
+            <li>Voluntariatul poate fi încheiat de către adăpost în caz de încălcare a termenilor (ex. comportament nepotrivit, neglijență).</li>
+            <li>Utilizatorii pot renunța oricând, notificând administratorii cu cel puțin 7 zile în avans.</li>
+        </ul>
+        <h4>9. Modificări ale termenilor</h4>
+        <ul>
+            <li>AdapostApp își rezervă dreptul de a actualiza acești termeni și condiții.</li>
+            <li>Utilizatorii vor fi notificați prin aplicație sau e-mail despre modificări, care vor intra în vigoare la data specificată.</li>
+        </ul>
+        <h4>10. Contact</h4>
+        <p>Pentru întrebări sau clarificări, contactați-ne la: support@adapostapp.com.</p>
+        ]]>
+    </string>
+    <string name="adoption_process_description">
+        <![CDATA[
+        <p>Adoptarea unui animal prin AdapostApp este simplă și transparentă. Urmează acești pași:</p>
+        <p><b>1. Vizualizarea animalelor</b><br>Accesează lista de animale disponibile din ecranul principal al aplicației. Poți filtra animalele după specie, vârstă sau alte criterii.</p>
+        <p><b>2. Autentificare</b><br>Pentru a trimite o cerere de adopție, trebuie să fii autentificat. Dacă nu ai un cont, îți vei crea unul sau te vei conecta cu adresa de e-mail și parola.</p>
+        <p><b>3. Trimiterea cererii de adopție</b><br>Selectează animalul dorit și apasă pe butonul "Adoptă". Completează formularul de cerere (ex. informații despre tine și experiența cu animalele). Cererea va fi trimisă automat către administratori.</p>
+        <p><b>4. Analiza cererii</b><br>Un administrator va analiza cererea ta. Acest proces poate dura între 1 și 3 zile lucrătoare, în funcție de volumul cererilor.</p>
+        <p><b>5. Aprobarea sau respingerea cererii</b><br>
+        - Dacă cererea este <b>aprobată</b>, vei primi o notificare prin aplicație sau e-mail, iar starea animalului va fi actualizată la "Adoptat".<br>
+        - Dacă cererea este <b>respinsă</b>, vei primi o notificare cu motivul respingerii, iar animalul va redeveni disponibil pentru alte cereri.</p>
+        <p><b>Condiții importante:</b><br>
+        - Trebuie să ai cel puțin 18 ani pentru a adopta un animal.<br>
+        - Este posibil ca administratorul să te contacteze pentru informații suplimentare (ex. printr-un chat în aplicație).</p>
+        <p><b>Excepții:</b><br>
+        - Dacă nu ești autentificat, vei fi redirecționat către ecranul de autentificare.<br>
+        - Dacă nu există conexiune la internet, cererea nu va fi trimisă, iar aplicația te va notifica să încerci din nou mai târziu.</p>
+        <p>Pentru orice întrebări, folosește chat-ul din aplicație pentru a contacta administratorii!</p>
+        ]]>
+    </string>
+
+    <string name="add_animal_activity">Adaugă animal</string>
+    <string name="adoption_application_details_activity">Detalii cerere adopție</string>
+    <string name="adoption_form_activity">Formular adopție</string>
+    <string name="adoption_process_activity">Proces adopție</string>
+    <string name="animal_profile_activity">Profil animal</string>
+    <string name="applications_list_activity">Listă cereri</string>
+    <string name="base_activity">Activitate de bază</string>
+    <string name="chat_activity">Conversație</string>
+    <string name="chat_list_activity">Lista conversațiilor</string>
+    <string name="edit_animal_activity">Editează animal</string>
+    <string name="edit_profile_activity">Editează profil</string>
+    <string name="favorites_activity">Favorite</string>
+    <string name="list_animal_activity">Listă animale</string>
+    <string name="main_activity">Acasă</string>
+    <string name="notifications_activity">Notificări</string>
+    <string name="profile_activity">Profil</string>
+    <string name="register_activity">Înregistrare</string>
+    <string name="terms_and_conditions_activity">Termeni și condiții</string>
+    <string name="volunteer_application_details_activity">Detalii aplicație voluntariat</string>
+    <string name="volunteer_form_activity">Formular voluntariat</string>
+    <string name="volunteer_applications">Aplicații voluntariat</string>
+
 </resources>

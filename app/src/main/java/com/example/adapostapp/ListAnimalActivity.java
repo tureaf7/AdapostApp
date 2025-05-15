@@ -4,22 +4,19 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.gridlayout.widget.GridLayout;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.example.adapostapp.utils.UserUtils;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -30,15 +27,19 @@ import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-public class ListAnimalActivity extends BaseActivity {
+import java.util.ArrayList;
+import java.util.List;
+
+public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.OnAdminActionListener {
     private ImageButton buttonBackToMain;
-    private GridLayout gridLayout;
-    private LinearLayout linearLayout;
-    private FirebaseFirestore db;
+    private RecyclerView recyclerViewAnimals;
     private TextView noneFavoriteTextView;
     private ProgressBar progressBar;
+    private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private FirebaseUser user;
+    private AnimalsAdapter adapter;
+    private FloatingActionButton fabAddAnimal;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,16 +47,28 @@ public class ListAnimalActivity extends BaseActivity {
         setContentView(R.layout.activity_list_animal);
 
         buttonBackToMain = findViewById(R.id.buttonBackToMain);
-        gridLayout = findViewById(R.id.GridLayout);
-        linearLayout = findViewById(R.id.linearLayout);
+        recyclerViewAnimals = findViewById(R.id.recyclerViewAnimals);
         noneFavoriteTextView = findViewById(R.id.textViewEmpty);
         progressBar = findViewById(R.id.progressBar);
+        fabAddAnimal = findViewById(R.id.fab_add_animal);
 
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
+
+        adapter = new AnimalsAdapter(this, isAdmin(), this);
+        recyclerViewAnimals.setAdapter(adapter);
+        if (isAdmin()) {
+            fabAddAnimal.setVisibility(View.VISIBLE);
+            fabAddAnimal.setOnClickListener(v -> startActivity(new Intent(this, AddAnimalActivity.class)));
+            recyclerViewAnimals.setLayoutManager(new LinearLayoutManager(this)); // Listă verticală pentru admin
+        } else {
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+            recyclerViewAnimals.setLayoutManager(gridLayoutManager);
+            recyclerViewAnimals.setPadding(0, 0, 0, 0); // Padding pentru margini simetrice
+        }
 
         setupBottomNavigation(R.id.navigation_animals);
         readAnimalsFromDB(getUserRole());
@@ -67,38 +80,28 @@ public class ListAnimalActivity extends BaseActivity {
     }
 
     private void readAnimalsFromDB(String role) {
+        progressBar.setVisibility(View.VISIBLE);
         db.collection("Animals")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Object> items = new ArrayList<>();
                     if (queryDocumentSnapshots.isEmpty()) {
                         Log.d("Firebase", "Nu au fost găsite animale.");
                         noneFavoriteTextView.setVisibility(View.VISIBLE);
                     } else {
-                        gridLayout.removeAllViews();
-                        linearLayout.removeAllViews();
-
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             Animal animal = document.toObject(Animal.class);
+                            animal.setId(document.getId());
                             if ("admin".equals(role)) {
-                                addCardToUIAdmin(animal);
+                                items.add(animal);
                             } else {
                                 if (!animal.isAdopted()) {
-                                    addAnimalCardToUI(animal);
+                                    items.add(animal);
                                 }
                             }
                         }
-                    }
-                    // Adăugăm butonul doar dacă utilizatorul este admin
-                    if ("admin".equals(role)) {
-                        View itemView = LayoutInflater.from(ListAnimalActivity.this)
-                                .inflate(R.layout.add_animal, linearLayout, false);
-
-                        itemView.findViewById(R.id.imageButton).setOnClickListener(v -> {
-                            Intent intent = new Intent(ListAnimalActivity.this, AddAnimalActivity.class);
-                            startActivity(intent);
-                        });
-                        Log.d("Firebase", "Utilizatorul este admin. Se afișează butonul de adăugare.");
-                        linearLayout.addView(itemView);
+                        adapter.setItems(items);
+                        noneFavoriteTextView.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
                     }
                     progressBar.setVisibility(View.GONE);
                 })
@@ -106,105 +109,29 @@ public class ListAnimalActivity extends BaseActivity {
                     Log.w("Firebase", "Eroare la preluarea datelor", e);
                     Toast.makeText(ListAnimalActivity.this, "Eroare la preluarea datelor", Toast.LENGTH_SHORT).show();
                     noneFavoriteTextView.setVisibility(View.VISIBLE);
+                    adapter.setItems(new ArrayList<>());
                     progressBar.setVisibility(View.GONE);
                 });
     }
 
-    private void addAnimalCardToUI(Animal animal) {
-        View itemView = LayoutInflater.from(this).inflate(R.layout.card_item, gridLayout, false);
-        itemView.findViewById(R.id.imageButtonFavorite).setVisibility(View.GONE);
-        ImageView imageGen = itemView.findViewById(R.id.imageGen);
-        imageGen.setImageResource(animal.getGen().equals("Mascul") ? R.drawable.ic_male : R.drawable.ic_female);
-
-        // Obține referințele la elementele din card
-        ImageView animalPhoto = itemView.findViewById(R.id.imageItemImageView);
-        TextView animalName = itemView.findViewById(R.id.textViewName);
-        TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
-        TextView animalAge = itemView.findViewById(R.id.textViewAge);
-
-        // Populează datele animalului
-        animalName.setText(animal.getName());
-        animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani"));
-
-        if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
-            Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
-        }
-
-        // Setează lățimea cardului pentru a ocupa jumătate din ecran
-        GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams();
-        layoutParams.rowSpec = GridLayout.spec(GridLayout.UNDEFINED); // Lasă rândul să fie dinamic
-        layoutParams.columnSpec = GridLayout.spec(GridLayout.UNDEFINED); // Lasă coloana să fie dinamică
-        layoutParams.setMargins(0, 0, 32, 32);  // Adaugă margini între carduri
-        itemView.setLayoutParams(layoutParams);
-
-        itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AnimalProfileActivity.class);
-            intent.putExtra("animal", animal.getId());
-            startActivity(intent);
-        });
-
-        // Adaugă cardul la GridLayout
-        gridLayout.addView(itemView);
+    @Override
+    public void onEditClicked(String animalId) {
+        Intent intent = new Intent(this, EditAnimalActivity.class);
+        intent.putExtra("animal", animalId);
+        startActivity(intent);
     }
 
-    private void addCardToUIAdmin(Animal animal) {
-        View itemView = LayoutInflater.from(this).inflate(R.layout.card_item_edit, linearLayout, false);
-
-        // Obține referințele la elementele din card
-        ImageView animalPhoto = itemView.findViewById(R.id.imageItemImageView);
-        TextView animalName = itemView.findViewById(R.id.textViewName);
-        TextView animalBreed = itemView.findViewById(R.id.textViewBreed);
-        TextView animalAge = itemView.findViewById(R.id.textViewAge);
-        TextView animalAdoptedStatus = itemView.findViewById(R.id.textViewAdoptedStatus);
-        ImageButton imageEdit = itemView.findViewById(R.id.imageEdit);
-        ImageButton imageButtonDelete = itemView.findViewById(R.id.imageButtonDelete);
-
-        // Populează datele animalului
-        animalName.setText(animal.getName());
-        animalBreed.setText(animal.getBreed());
-        animalAge.setText(animal.getYears() + (animal.getYears() == 1 ? " an" : " ani") +
-                " si " + animal.getMonths() + (animal.getMonths() == 1 ? " luna" : " luni"));
-        animalAdoptedStatus.setText(animal.isAdopted() ? "Adoptat" : "Disponibil");
-
-        if (!isFinishing() && !isDestroyed()) {
-            if (animal.getPhoto() != null && !animal.getPhoto().isEmpty()) {
-                Glide.with(this).load(animal.getPhoto()).into(animalPhoto);
-            }
-        } else {
-            Log.w("ListAnimalActivity", "Activitatea este distrusă, nu încarcăm imaginea pentru " + animal.getName());
-        }
-
-        imageEdit.setOnClickListener(v -> {
-            Intent intent = new Intent(this, EditAnimalActivity.class);
-            intent.putExtra("animal", animal.getId());
-            startActivity(intent);
-        });
-        imageButtonDelete.setOnClickListener(v -> {
-            showDeleteConfirmationDialog(animal.getId());
-        });
-
-        itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AnimalProfileActivity.class);
-            intent.putExtra("animal", animal.getId());
-            intent.putExtra("favorite", "favorite");
-            startActivity(intent);
-        });
-
-        // Adaugă cardul la LinearLayout
-        linearLayout.addView(itemView);
+    @Override
+    public void onDeleteClicked(String animalId) {
+        showDeleteConfirmationDialog(animalId);
     }
 
-    private void showDeleteConfirmationDialog(String Id) {
+    private void showDeleteConfirmationDialog(String animalId) {
         new AlertDialog.Builder(this)
                 .setTitle("Ștergere animal din baza de date")
                 .setMessage("Ești sigur că vrei să ștergi acest animal din baza de date?")
-                .setPositiveButton("Da", (dialog, which) -> {
-                    deleteAnimalAndImage(Id);
-                })
-                .setNegativeButton("Anulează", (dialog, which) -> {
-                    dialog.dismiss();
-                })
+                .setPositiveButton("Da", (dialog, which) -> deleteAnimalAndImage(animalId))
+                .setNegativeButton("Anulează", (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
@@ -240,7 +167,6 @@ public class ListAnimalActivity extends BaseActivity {
     }
 
     private void removeAnimalFromFavorites(String animalId) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference animalRef = db.collection("Animals").document(animalId);
 
         db.collection("users")
@@ -263,9 +189,7 @@ public class ListAnimalActivity extends BaseActivity {
     }
 
     private void deleteAnimalAndApplications(String animalId) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
         WriteBatch batch = db.batch();
-
         DocumentReference animalRef = db.collection("Animals").document(animalId);
         batch.delete(animalRef);
 
@@ -277,7 +201,6 @@ public class ListAnimalActivity extends BaseActivity {
                         DocumentReference applicationRef = document.getReference();
                         batch.delete(applicationRef);
                     }
-
                     batch.commit()
                             .addOnSuccessListener(aVoid -> {
                                 readAnimalsFromDB("admin"); // Actualizăm UI-ul doar dacă rolul este "admin"
@@ -286,5 +209,11 @@ public class ListAnimalActivity extends BaseActivity {
                             .addOnFailureListener(e -> Log.w("Firebase", "Eroare la ștergerea datelor.", e));
                 })
                 .addOnFailureListener(e -> Log.w("Firebase", "Eroare la preluarea cererilor de adopție.", e));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        readAnimalsFromDB(getUserRole()); // Reîmprospătăm lista la revenire
     }
 }

@@ -1,5 +1,7 @@
 package com.example.adapostapp;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.View;
@@ -20,6 +22,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.time.Instant;
 
 public class AdoptionFormActivity extends AppCompatActivity {
     private EditText numar_telefon, adresa, animale_precedente_detalii, animal_curent_specie, animal_curent_varsta,
@@ -59,7 +63,7 @@ public class AdoptionFormActivity extends AppCompatActivity {
         mesaj_adapost = findViewById(R.id.message_to_shelter);
         accept_terms_textView = findViewById(R.id.accept_terms_textView);
         termeni_conditii = findViewById(R.id.accept_terms);
-        accept_terms_textView.setText(Html.fromHtml("Ați citit și acceptați <font color='#06D6A0'><b>termenii și condițiile adopției?</b></font>"));
+        accept_terms_textView.setText(Html.fromHtml("<font color='#06D6A0'><b>termenii și condițiile</b></font>"));
         previous_pet_layout = findViewById(R.id.previous_pet_layout);
         other_pets_details_layout = findViewById(R.id.other_pets_details_layout);
         owner_permission_layout = findViewById(R.id.owner_permission_layout);
@@ -126,6 +130,12 @@ public class AdoptionFormActivity extends AppCompatActivity {
                     owner_permission_layout.setVisibility(View.GONE);
                 }
             }
+        });
+
+        accept_terms_textView.setOnClickListener(v -> {
+            Intent intent = new Intent(this, TermsAndConditionsActivity.class);
+            intent.putExtra("title", "adoption");
+            startActivity(intent);
         });
     }
 

@@ -14,11 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -149,7 +147,7 @@ setupBottomNavigation(R.id.navigation_favorites);
 
     private void addAnimalCardToUI(Animal animal) {
         // Crează cardul pentru animal
-        View itemView = LayoutInflater.from(this).inflate(R.layout.card_item, gridLayout, false);
+        View itemView = LayoutInflater.from(this).inflate(R.layout.card_animal_item, gridLayout, false);
 
         // Obține referințele la elementele din card
         ImageView animalPhoto = itemView.findViewById(R.id.imageItemImageView);

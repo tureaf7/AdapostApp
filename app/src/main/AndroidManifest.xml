@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <!-- Alte activități -->
-        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".ProfileActivity" android:exported="false"  />
         <activity android:name=".FavoritesActivity" android:exported="false" />
         <activity android:name=".ChatListActivity" android:exported="false" />
         <activity android:name=".RegisterActivity" android:exported="false" />
@@ -48,6 +48,8 @@
         <activity android:name=".VolunteerFormActivity" android:exported="false" />
         <activity android:name=".VolunteerApplicationDetailsActivity" android:exported="false" />
         <activity android:name=".ApplicationsListActivity" android:exported="false" />
+        <activity android:name=".TermsAndConditionsActivity" android:exported="false" />
+        <activity android:name=".AdoptionProcessActivity" android:exported="false" />
 
 
         <meta-data

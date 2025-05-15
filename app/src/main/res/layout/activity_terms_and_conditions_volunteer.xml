@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--Edittext for getting course Name-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <ImageButton
+            android:id="@+id/buttonBackToMain"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/ripple_custom"
+            android:src="@drawable/ic_arrow_left" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:text="@string/terms_title"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textViewTermsAndConditions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/terms_volunteer_description"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:lineSpacingExtra="8dp"
+            android:paddingBottom="16dp" />
+
+    </ScrollView>
+
+</LinearLayout>

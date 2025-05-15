@@ -3,8 +3,8 @@
   <component name="deploymentTargetSelector">
     <selectionStates>
       <SelectionState runConfigName="app">
-        <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2025-03-27T20:06:11.473966300Z">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2025-05-13T12:57:01.943410700Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=ZY22G84P22" />
@@ -20,7 +20,7 @@
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\turea\.android\avd\Pixel_6_Pro_API_29.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\turea\.android\avd\Pixel_6_2.avd" />
               </handle>
             </Target>
           </targets>

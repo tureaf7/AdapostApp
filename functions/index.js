@@ -311,20 +311,6 @@ exports.sendChatNotification = onDocumentCreated('Chats/{chatId}/Messages/{messa
         // Trunchiază mesajul dacă este prea lung
         const truncatedMessage = messageText.length > 50 ? messageText.substring(0, 47) + '...' : messageText;
 
-        // Actualizează users/{receiverId}/chats pentru a seta hasUnreadMessages
-        await admin.firestore()
-            .collection('users')
-            .doc(receiverId)
-            .collection('chats')
-            .doc(chatId)
-            .set({
-                chatId: chatId,
-                otherUserId: senderId,
-                hasUnreadMessages: true,
-                lastMessage: messageText,
-                timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            }, { merge: true });
-
         // Construiește payload-ul pentru notificarea FCM
         const payload = {
             data: {

@@ -86,6 +86,7 @@ public class MainActivity extends BaseActivity {
 
         voluntarText.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, VolunteerFormActivity.class)));
         notificationButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, NotificationsActivity.class)));
+        adoptInfoText.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, AdoptionProcessActivity.class)));
 
         // Creează canalul de notificări
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -186,10 +187,7 @@ public class MainActivity extends BaseActivity {
                 });
     }
 
-    private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
-    }
+
 
     @Override
     protected void onDestroy() {
@@ -291,7 +289,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void addAnimalCardToUI(Animal animal, String favoriteTag) {
-        View itemView = LayoutInflater.from(this).inflate(R.layout.card_item, horizontalLinearLayout, false);
+        View itemView = LayoutInflater.from(this).inflate(R.layout.card_animal_item, horizontalLinearLayout, false);
 
         ImageView animalPhoto = itemView.findViewById(R.id.imageItemImageView);
         ImageView imageGen = itemView.findViewById(R.id.imageGen);
@@ -332,12 +330,17 @@ public class MainActivity extends BaseActivity {
             });
         }
 
+
         itemView.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AnimalProfileActivity.class);
             intent.putExtra("animal", animal.getId());
             intent.putExtra("favorite", imageButtonFavorite.getTag() != null ? imageButtonFavorite.getTag().toString() : "not_favorite");
             startActivity(intent);
         });
+
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) itemView.getLayoutParams();
+        params.setMargins(params.leftMargin, params.topMargin, dpToPx(24), params.bottomMargin); // de exemplu 8dp margine dreapta
+        itemView.setLayoutParams(params);
 
         horizontalLinearLayout.addView(itemView);
     }

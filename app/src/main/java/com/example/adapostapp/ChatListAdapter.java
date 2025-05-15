@@ -104,7 +104,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatLi
                 unreadMessageListeners.remove(chat.getChatId());
             }
 
-            // Verifică dacă există mesaje necitite pentru acest chat
+               // Verifică dacă există mesaje necitite pentru acest chat
             ListenerRegistration unreadListener = FirebaseFirestore.getInstance()
                     .collection("users").document(currentUserId)
                     .collection("chats").document(chat.getChatId())

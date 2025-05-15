@@ -1,0 +1,540 @@
+@startuml
+
+/' diagram meta data start
+config=StructureConfiguration;
+{
+  "projectClassification": {
+    "searchMode": "OpenProject", // OpenProject, AllProjects
+    "includedProjects": "",
+    "pathEndKeywords": "*.impl",
+    "isClientPath": "",
+    "isClientName": "",
+    "isTestPath": "",
+    "isTestName": "",
+    "isMappingPath": "",
+    "isMappingName": "",
+    "isDataAccessPath": "",
+    "isDataAccessName": "",
+    "isDataStructurePath": "",
+    "isDataStructureName": "",
+    "isInterfaceStructuresPath": "",
+    "isInterfaceStructuresName": "",
+    "isEntryPointPath": "",
+    "isEntryPointName": "",
+    "treatFinalFieldsAsMandatory": false
+  },
+  "graphRestriction": {
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "removeByInheritance": "", // inheritance/annotation based filtering is done in a second step
+    "removeByAnnotation": "",
+    "removeByClassPackage": "", // cleanup the graph after inheritance/annotation based filtering is done
+    "removeByClassName": "",
+    "cutMappings": false,
+    "cutEnum": true,
+    "cutTests": true,
+    "cutClient": true,
+    "cutDataAccess": true,
+    "cutInterfaceStructures": true,
+    "cutDataStructures": true,
+    "cutGetterAndSetter": true,
+    "cutConstructors": true
+  },
+  "graphTraversal": {
+    "forwardDepth": 3,
+    "backwardDepth": 3,
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "hideMappings": false,
+    "hideDataStructures": false,
+    "hidePrivateMethods": true,
+    "hideInterfaceCalls": true, // indirection: implementation -> interface (is hidden) -> implementation
+    "onlyShowApplicationEntryPoints": false, // root node is included
+    "useMethodCallsForStructureDiagram": "ForwardOnly" // ForwardOnly, BothDirections, No
+  },
+  "details": {
+    "aggregation": "GroupByClass", // ByClass, GroupByClass, None
+    "showClassGenericTypes": true,
+    "showMethods": true,
+    "showMethodParameterNames": true,
+    "showMethodParameterTypes": true,
+    "showMethodReturnType": true,
+    "showPackageLevels": 2,
+    "showDetailedClassStructure": true
+  },
+  "rootClass": "com.example.adapostapp.NotificationsActivity",
+  "extensionCallbackMethod": "" // qualified.class.name#methodName - signature: public static String method(String)
+}
+diagram meta data end '/
+
+
+
+digraph g {
+    rankdir="TB"
+    splines=polyline
+    
+
+'nodes 
+subgraph cluster_1322970774 { 
+   	label=example
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_300727847 { 
+   	label=adapostapp
+	labeljust=l
+	fillcolor="#d8d8d8"
+	style=filled
+   
+   AdoptionApplicationDetailsActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)AdoptionApplicationDetailsActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   adminName: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   adoptedBefore: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   allergicMember: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   animalAge: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   animalArrivalDate: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   animalBreed: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   animalName: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   animalPhoto: ImageView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   applicationId: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   applicationStatusApproved: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   applicationStatusRejected: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   approveButton: Button [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   auth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   backButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   callButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   careAnimal: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   detailsApplication: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   emailButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   firebaseUser: FirebaseUser [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   healthBehavior: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutButtons: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutStatusInfo: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   livingEnvironment: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   messageButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   ownerPermission: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   petBefore: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   petCurrent: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   petCurrentDetails: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   petPreviousDetails: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   rejectButton: Button [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   rentOrOwn: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   shelterMessage: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userAddress: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userEmail: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userName: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userPhoneNumber: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userPhoto: ImageView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   vacationPlan: TextView [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- approveAdoption(adoptionApplication: AdoptionApplication)</TD></TR>
+<TR><TD ALIGN="LEFT" >- callUser()</TD></TR>
+<TR><TD ALIGN="LEFT" >- getAdminName(adoptionApplication: AdoptionApplication)</TD></TR>
+<TR><TD ALIGN="LEFT" >- getAdoptionApplicationDetails()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" >- openChat(chatId: String, otherUserId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- rejectAdoption(adoptionApplication: AdoptionApplication)</TD></TR>
+<TR><TD ALIGN="LEFT" >- rejectOtherApplications(animalId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- sendEmail()</TD></TR>
+<TR><TD ALIGN="LEFT" >- sendMessage()</TD></TR>
+<TR><TD ALIGN="LEFT" >- sendNotificationToUser(userId: String, message: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- userAndAnimalInfo(userId: String, animalId: String)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+ApplicationsListActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)ApplicationsListActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   adapter: ApplicationsAdapter [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   allAdoptionApplications: List&lt;AdoptionApplication&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   allVolunteerApplications: List&lt;VolunteerApplications&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   buttonBackToMain: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   dateFormat: SimpleDateFormat [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   firebaseAuth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   firebaseUser: FirebaseUser [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   noneFavoriteTextView: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   progressBar: ProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   recyclerViewApplications: RecyclerView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   spinnerFilter: Spinner [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   tabLayout: TabLayout [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- fetchAdoptionApplications()</TD></TR>
+<TR><TD ALIGN="LEFT" >- fetchVolunteerApplications()</TD></TR>
+<TR><TD ALIGN="LEFT" >- filterRequests(status: String)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onResume()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+BaseActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)BaseActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   auth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   bottomNavigationView: BottomNavigationView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   unreadMessagesListener: ListenerRegistration [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   userRole: String [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" ># checkUserRole(user: FirebaseUser)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ dpToPx(dp: int): int</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onDestroy()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onStart()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onStop()</TD></TR>
+<TR><TD ALIGN="LEFT" ># saveFcmToken(currentUserId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateMessagesBadge()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+ChatListActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)ChatListActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   adapter: ChatListAdapter [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   auth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   chats: List&lt;Chat&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   chatsListener: ListenerRegistration [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   currentUserId: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   firebaseUser: FirebaseUser [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   progressBar: ProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   recyclerViewChatList: RecyclerView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   searchAutoComplete: AutoCompleteTextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   textViewEmpty: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userAdapter: UserAdapter [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   usersList: List&lt;User&gt; [0..*]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- loadChats()</TD></TR>
+<TR><TD ALIGN="LEFT" >- loadUsers(role: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ onChatClick(chat: Chat)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onDestroy()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onResume()</TD></TR>
+<TR><TD ALIGN="LEFT" >- openChat(user: User)</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateUIAfterLoad()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+FavoritesActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)FavoritesActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   buttonBackToMain: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   gridLayout: GridLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   mAuth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   noneFavoriteTextView: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   progressBar: ProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   scrollView: ScrollView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   user: FirebaseUser [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- addAnimalCardToUI(animal: Animal)</TD></TR>
+<TR><TD ALIGN="LEFT" >- fetchAnimals()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onResume()</TD></TR>
+<TR><TD ALIGN="LEFT" >- removeFromFavorite(documentId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- showDeleteConfirmationDialog(documentId: String, itemView: View)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+ListAnimalActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)ListAnimalActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   adapter: AnimalsAdapter [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   buttonBackToMain: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   fabAddAnimal: FloatingActionButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   mAuth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   noneFavoriteTextView: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   progressBar: ProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   recyclerViewAnimals: RecyclerView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   user: FirebaseUser [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- deleteAnimalAndApplications(animalId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- deleteAnimalAndImage(animalId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ onDeleteClicked(animalId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ onEditClicked(animalId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onResume()</TD></TR>
+<TR><TD ALIGN="LEFT" >- readAnimalsFromDB(role: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- removeAnimalFromFavorites(animalId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- showDeleteConfirmationDialog(animalId: String)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+MainActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)MainActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   adoptInfoText: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   donatText: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   horizontalLinearLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   mAuth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   noneAnimalTextView: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   notificationButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   notificationListener: ListenerRegistration [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   progressBar: ProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   user: FirebaseUser [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   voluntarText: TextView [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- addAnimalCardToUI(animal: Animal, favoriteTag: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- addToFavorite(imageButtonFavorite: ImageButton, documentId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- addViewMoreButton()</TD></TR>
+<TR><TD ALIGN="LEFT" >- checkNotificationPermission()</TD></TR>
+<TR><TD ALIGN="LEFT" >- checkNotifications()</TD></TR>
+<TR><TD ALIGN="LEFT" >- fetchAnimals()</TD></TR>
+<TR><TD ALIGN="LEFT" >- handleNotificationIntent(intent: Intent)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onDestroy()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onNewIntent(intent: Intent)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ onRequestPermissionsResult(requestCode: int, permissions: String[], grantResults: int[])</TD></TR>
+<TR><TD ALIGN="LEFT" ># onResume()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onStart()</TD></TR>
+<TR><TD ALIGN="LEFT" >- readAnimalsFromDB()</TD></TR>
+<TR><TD ALIGN="LEFT" >- readAnimalsFromDB(favoriteAnimalIds: List&lt;String&gt;)</TD></TR>
+<TR><TD ALIGN="LEFT" >- removeFromFavorite(imageButtonFavorite: ImageButton, documentId: String)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+Notification578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Notification</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   applicationId: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   body: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   id: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   timestamp: Date [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   title: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   type: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userId: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   viewed: boolean [1]</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+NotificationAdapter578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)NotificationAdapter</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   notifications: List&lt;Notification&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   onNotificationClickListener: OnNotificationClickListener [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ onBindViewHolder(holder: NotificationViewHolder, position: int)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ onCreateViewHolder(parent: ViewGroup, viewType: int): NotificationViewHolder</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+NotificationsActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)NotificationsActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   adapter: NotificationAdapter [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   auth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   backButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   notifications: List&lt;Notification&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   progressBar: ProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   recyclerViewNotifications: RecyclerView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   textViewEmpty: TextView [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- loadNotifications()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ onNotificationClick(notification: Notification)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+ProfileActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)ProfileActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   addAnimalLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   adminLogOutLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   adminNameTextView: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   adminPhotoImageView: CircleImageView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   adoptionApplication: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   adoptionsLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   auth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   editAnimalLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   editProfileLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   emailET: EditText [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   favoritesLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   googleSignInClient: GoogleSignInClient [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutAdmin: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutLogin: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutUser: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   logoutLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   notificationLayout: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   passwordET: EditText [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   progressBar: ProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   textViewForgotPassword: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   textViewRegister: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   user: FirebaseUser [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userNameTextView: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userPhotoImageView: CircleImageView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   volunteersLayout: LinearLayout [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- checkAndSaveUserGoogle(firebaseUser: FirebaseUser, account: GoogleSignInAccount)</TD></TR>
+<TR><TD ALIGN="LEFT" >- checkRole(user: FirebaseUser)</TD></TR>
+<TR><TD ALIGN="LEFT" >- isUserExist(user: FirebaseUser)</TD></TR>
+<TR><TD ALIGN="LEFT" >- isUserLoggedInWithGoogle(user: FirebaseUser): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >- logOut()</TD></TR>
+<TR><TD ALIGN="LEFT" >- loginUser()</TD></TR>
+<TR><TD ALIGN="LEFT" ># onActivityResult(requestCode: int, resultCode: int, data: Intent)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" >- proceedWithLogout()</TD></TR>
+<TR><TD ALIGN="LEFT" >- resetPassword(email: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- showSignOutConfirmationDialog()</TD></TR>
+<TR><TD ALIGN="LEFT" >- showUserInfo(role: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- signInWithGoogle()</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateUserInfo(role: String, user: FirebaseUser)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+UserUtils1169057289[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)UserUtils</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ addUser(firebaseUser: FirebaseUser, user: User, callback: AddUserCallback)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ checkUserRole(user: FirebaseUser, callback: UserRoleCallback)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ deleteUser(user: FirebaseUser, callback: DeleteUserCallback)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getSavedRole(context: Context): String</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getUserInfo(firebaseUser: FirebaseUser, callback: UserInfoCallback)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ isUserExist(firebaseUser: FirebaseUser, callback: UserExistCallback)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+VolunteerApplicationDetailsActivity578565044[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)VolunteerApplicationDetailsActivity</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   adminName: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   applicationId: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   applicationStatusApproved: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   applicationStatusRejected: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   approveButton: Button [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   auth: FirebaseAuth [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   backButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   callButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   db: FirebaseFirestore [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   detailsApplication: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   emailButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   experience: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   experienceAnswer: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   experienceDetailsText: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   firebaseUser: FirebaseUser [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutAvailability: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutButtons: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   linearLayoutStatusInfo: LinearLayout [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   messageButton: ImageButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   motivationText: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   rejectButton: Button [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userEmail: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userName: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userPhoneNumber: TextView [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   userPhoto: ImageView [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- callUser()</TD></TR>
+<TR><TD ALIGN="LEFT" >- displayAvailability(availability: Map&lt;String, String&gt;)</TD></TR>
+<TR><TD ALIGN="LEFT" >- getAdminName(volunteerApplications: VolunteerApplications)</TD></TR>
+<TR><TD ALIGN="LEFT" >- getVolunteerApplicationDetails()</TD></TR>
+<TR><TD ALIGN="LEFT" >- manageApplication(status: String, details: String)</TD></TR>
+<TR><TD ALIGN="LEFT" ># onCreate(savedInstanceState: Bundle)</TD></TR>
+<TR><TD ALIGN="LEFT" >- openChat(chatId: String, otherUserId: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- sendEmail()</TD></TR>
+<TR><TD ALIGN="LEFT" >- sendMessage()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+} 
+
+'edges    
+BaseActivity578565044 -> AdoptionApplicationDetailsActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> ApplicationsListActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> ChatListActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> FavoritesActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> ListAnimalActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> MainActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> NotificationsActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> ProfileActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+BaseActivity578565044 -> UserUtils1169057289[label="checkUserRole() -> checkUserRole()"];
+BaseActivity578565044 -> VolunteerApplicationDetailsActivity578565044[arrowhead=none, arrowtail=empty, dir=both];
+NotificationAdapter578565044 -> Notification578565044[label="notifications
+[0..*]"];
+NotificationAdapter578565044 -> NotificationsActivity578565044[label="onNotificationClickListener
+[0..1]", arrowhead=none];
+NotificationsActivity578565044 -> Notification578565044[label="notifications
+[0..*]"];
+NotificationsActivity578565044 -> NotificationAdapter578565044[label="adapter
+[0..1]"];
+    
+}
+@enduml

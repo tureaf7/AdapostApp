@@ -20,6 +20,7 @@
             android:id="@+id/buttonBackToMain"
             android:layout_width="64dp"
             android:layout_height="64dp"
+            android:layout_weight="0"
             android:background="@drawable/ripple_custom"
             android:maxWidth="64dp"
             android:maxHeight="64dp"
@@ -29,7 +30,7 @@
 
         <TextView
             android:id="@+id/textView"
-            android:layout_width="255dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
@@ -39,7 +40,7 @@
         <Space
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:layout_weight="1" />
+            android:layout_weight="0" />
 
     </LinearLayout>
 

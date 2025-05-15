@@ -1,5 +1,6 @@
 package com.example.adapostapp;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
@@ -12,16 +13,20 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.ServerTimestamp;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -29,7 +34,6 @@ public class ChatActivity extends AppCompatActivity {
     private static final String TAG = "ChatActivity";
     private RecyclerView recyclerViewMessages;
     private EditText editTextMessage;
-    private ImageButton buttonSend, buttonBack;
     private CircleImageView imageViewProfile;
     private MessageAdapter messageAdapter;
     private List<Message> messages;
@@ -38,6 +42,7 @@ public class ChatActivity extends AppCompatActivity {
     private String chatId, otherUserId, currentUserId;
     private ListenerRegistration messagesListener; // Pentru markMessagesAsRead
     private ListenerRegistration loadMessagesListener; // Pentru loadMessages
+    private ListenerRegistration unreadMessagesListener; // Pentru unreadMessages
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,26 +51,22 @@ public class ChatActivity extends AppCompatActivity {
 
         recyclerViewMessages = findViewById(R.id.recyclerViewMessages);
         editTextMessage = findViewById(R.id.editTextMessage);
-        buttonSend = findViewById(R.id.buttonSend);
+        ImageButton buttonSend = findViewById(R.id.buttonSend);
         messages = new ArrayList<>();
         messageAdapter = new MessageAdapter(messages);
         recyclerViewMessages.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewMessages.setAdapter(messageAdapter);
-        buttonBack = findViewById(R.id.buttonBack);
+        ImageButton buttonBack = findViewById(R.id.buttonBack);
         imageViewProfile = findViewById(R.id.imageViewProfile);
         nameTextView = findViewById(R.id.textViewOtherUser);
 
         db = FirebaseFirestore.getInstance();
-        currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         chatId = getIntent().getStringExtra("chatId");
         otherUserId = getIntent().getStringExtra("otherUserId");
         Log.d("ChatActivity", "Other user ID: " + otherUserId);
 
         loadOtherUser(otherUserId);
-        if (chatId != null) {
-            loadMessages();
-            markMessagesAsRead();
-        }
         buttonBack.setOnClickListener(v -> finish());
 
         buttonSend.setOnClickListener(v -> {
@@ -107,6 +108,7 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void loadMessages() {
         loadMessagesListener = db.collection("Chats").document(chatId)
                 .collection("Messages")
@@ -159,6 +161,7 @@ public class ChatActivity extends AppCompatActivity {
                     }
                 });
     }
+
 
     @Override
     protected void onResume() {
@@ -221,10 +224,63 @@ public class ChatActivity extends AppCompatActivity {
                 .add(message)
                 .addOnSuccessListener(documentReference -> {
                     // Mesajul a fost trimis
+                    Log.d("ChatActivity", "Mesaj trimis cu succes!");
+                    updateChatSummary(chatId, otherUserId, message, true);
                 })
                 .addOnFailureListener(e -> {
                     Log.e("ChatActivity", "Eroare la trimiterea mesajului!", e);
                     Toast.makeText(this, "Eroare la trimiterea mesajului!", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void updateChatSummary(String chatId, String otherUserId, Message message, boolean hasUnreadMessages) {
+        ChatSummary chatSummary = new ChatSummary(chatId, otherUserId, message.getMessage(), hasUnreadMessages);
+        db.collection("users")
+                .document(otherUserId)
+                .collection("chats")
+                .document(chatId)
+                .set(chatSummary, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Chat actualizat pentru user " + otherUserId))
+                .addOnFailureListener(e -> Log.w(TAG, "Eroare la actualizarea chat-ului pentru user " + otherUserId, e));
+    }
+
+    static class ChatSummary {
+        private String chatId;
+        private String otherUserId;
+        private String lastMessage;
+        @ServerTimestamp
+        private Timestamp timestamp;
+        private boolean hasUnreadMessages;
+
+        public ChatSummary() {
+        }
+
+        public ChatSummary(String chatId, String otherUserId, String lastMessage, boolean hasUnreadMessages) {
+            this.chatId = chatId;
+            this.otherUserId = otherUserId;
+            this.lastMessage = lastMessage;
+            this.hasUnreadMessages = hasUnreadMessages;
+            // Nu setăm timestamp aici; Firestore îl va seta automat datorită @ServerTimestamp
+        }
+
+        public String getChatId() {
+            return chatId;
+        }
+
+        public String getOtherUserId() {
+            return otherUserId;
+        }
+
+        public String getLastMessage() {
+            return lastMessage;
+        }
+
+        public Timestamp getTimestamp() {
+            return timestamp;
+        }
+
+        public boolean isHasUnreadMessages() {
+            return hasUnreadMessages;
+        }
     }
 }

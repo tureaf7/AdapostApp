@@ -2,6 +2,7 @@ package com.example.adapostapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,13 +32,13 @@ import java.util.Map;
 public class VolunteerFormActivity extends AppCompatActivity {
     private EditText fullName, phoneNumber, motivation, mondayTime, tuesdayTime,
             wednesdayTime, thursdayTime, fridayTime, saturdayTime, sundayTime, experienceDetails;
-    private CheckBox monday, tuesday, wednesday, thursday, friday, saturday, sunday, terms;
+    private CheckBox monday, tuesday, wednesday, thursday, friday, saturday, sunday, termeni_conditii;
     private Button submitButton;
     private ImageButton backButton;
     private FirebaseAuth auth;
     private FirebaseFirestore db;
     private RadioGroup experienceRadioGroup;
-    private TextView error_message;
+    private TextView error_message, accept_terms_textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,10 @@ public class VolunteerFormActivity extends AppCompatActivity {
         friday = findViewById(R.id.friday);
         saturday = findViewById(R.id.saturday);
         sunday = findViewById(R.id.sunday);
-        terms = findViewById(R.id.terms);
+
+        accept_terms_textView = findViewById(R.id.accept_terms_textView);
+        termeni_conditii = findViewById(R.id.accept_terms);
+        accept_terms_textView.setText(Html.fromHtml("<font color='#06D6A0'><b>termenii și condițiile</b></font>"));
 
         submitButton = findViewById(R.id.submitVolunteerForm);
         backButton = findViewById(R.id.buttonBackToMain);
@@ -114,6 +118,12 @@ public class VolunteerFormActivity extends AppCompatActivity {
         setupDayCheckBox(friday, fridayTime);
         setupDayCheckBox(saturday, saturdayTime);
         setupDayCheckBox(sunday, sundayTime);
+
+        accept_terms_textView.setOnClickListener(v -> {
+            Intent intent = new Intent(this, TermsAndConditionsActivity.class);
+            intent.putExtra("title", "volunteer");
+            startActivity(intent);
+        });
 
         // Listener pentru butonul Submit
         submitButton.setOnClickListener(v -> {
@@ -192,7 +202,7 @@ public class VolunteerFormActivity extends AppCompatActivity {
             motivation.setError("Motivația este obligatorie");
             return false;
         }
-        if (!terms.isChecked()) {
+        if (!termeni_conditii.isChecked()) {
             Toast.makeText(this, "Trebuie să accepți termenii și condițiile!", Toast.LENGTH_SHORT).show();
             return false;
         }

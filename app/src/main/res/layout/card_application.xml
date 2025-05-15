@@ -1,4 +1,3 @@
-<!-- card_adoption_application.xml -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -15,26 +14,26 @@
         android:orientation="horizontal"
         android:padding="12dp">
 
-        <!-- Imaginea animalului -->
+        <!-- Imagine (animal sau utilizator) -->
         <ImageView
-            android:id="@+id/userImageView"
+            android:id="@+id/applicationImageView"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_gravity="center"
             android:layout_marginEnd="12dp"
-            android:contentDescription="Imagine canditat"
+            android:contentDescription="Imagine cerere"
             android:scaleType="centerCrop" />
 
-        <!-- Detalii cerere adopție -->
+        <!-- Detalii cerere -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- Numele animalului -->
+            <!-- Nume (animal sau utilizator) -->
             <TextView
-                android:id="@+id/userNameTextView"
+                android:id="@+id/nameTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
@@ -56,7 +55,7 @@
                 android:id="@+id/statusPendingTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="In asteptare"
+                android:text="În așteptare"
                 android:textColor="@android:color/holo_orange_dark"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -65,7 +64,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -108,7 +107,7 @@
                         android:textSize="14sp" />
 
                     <TextView
-                        android:id="@+id/dateAnswer"
+                        android:id="@+id/dateAnswerTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1" />
@@ -118,6 +117,5 @@
 
         </LinearLayout>
 
-        <!-- Buton pentru detalii cerere -->
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

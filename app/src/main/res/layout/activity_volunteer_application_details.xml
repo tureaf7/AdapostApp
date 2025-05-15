@@ -13,34 +13,25 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="8dp">
 
         <ImageButton
             android:id="@+id/buttonBackToMain"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/ripple_custom"
-            android:maxWidth="64dp"
-            android:maxHeight="64dp"
-            android:padding="8dp"
-            android:src="@drawable/ic_arrow_left"
-            tools:ignore="SpeakableTextPresentCheck" />
+            android:src="@drawable/ic_arrow_left" />
 
         <TextView
             android:id="@+id/textView"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_marginStart="8dp"
             android:gravity="center"
-            android:text="Cerere de voluntariat"
-            android:textSize="20sp" />
-
-        <Space
-            android:layout_width="64dp"
-            android:layout_height="64dp" />
+            android:text="@string/adoption_form_activity"
+            android:textSize="20sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- Conținutul cererii -->
@@ -50,9 +41,6 @@
         android:layout_height="0dp"
         android:layout_above="@+id/bottomNavigationView"
         android:layout_below="@+id/linearLayout3"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
         tools:ignore="SpeakableTextPresentCheck">
 
         <LinearLayout
@@ -413,6 +401,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_navigation_menu"
-         />
+        app:menu="@menu/bottom_navigation_menu" />
 </RelativeLayout>

@@ -12,37 +12,27 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="8dp">
 
         <ImageButton
             android:id="@+id/buttonBackToMain"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/ripple_custom"
-            android:maxWidth="64dp"
-            android:maxHeight="64dp"
-            android:padding="8dp"
-            android:src="@drawable/ic_arrow_left"
-            tools:ignore="SpeakableTextPresentCheck" />
+            android:src="@drawable/ic_arrow_left" />
 
         <TextView
             android:id="@+id/textView"
-            android:layout_width="255dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_marginStart="8dp"
             android:gravity="center"
-            android:text="Editare profil"
-            android:textSize="20sp" />
-
-        <Space
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_weight="1" />
-
+            android:text="@string/edit_profile_activity"
+            android:textSize="20sp"
+            android:textStyle="bold" />
     </LinearLayout>
+
 
     <ScrollView
         android:layout_width="match_parent"
