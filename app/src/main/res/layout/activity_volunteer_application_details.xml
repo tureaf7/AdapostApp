@@ -29,7 +29,7 @@
             android:layout_height="match_parent"
             android:layout_marginStart="8dp"
             android:gravity="center"
-            android:text="@string/adoption_form_activity"
+            android:text="@string/volunteer_application_details_activity"
             android:textSize="20sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -354,35 +354,62 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <TextView
-                    android:id="@+id/applicationStatusApproved"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Aprobat"
-                    android:textColor="@color/turcoaz"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/applicationStatusRejected"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Respins"
-                    android:textColor="@android:color/holo_red_dark"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/adminName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Aprobat/Respins de: [Nume admin]" />
+                        <TextView
+                            android:id="@+id/applicationStatusApproved"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Aprobat"
+                            android:textColor="@color/turcoaz"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
 
-                <TextView
-                    android:id="@+id/detailsApplication"
-                    android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/applicationStatusRejected"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Respins"
+                            android:textColor="@android:color/holo_red_dark"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/adminName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="de catre: [Nume admin]" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Detalii: [Motiv respingere sau alte note]" />
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView20"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Detalii / Motiv: " />
+
+                    <TextView
+                        android:id="@+id/detailsApplication"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="[Motiv respingere sau alte note]" />
+                </LinearLayout>
+
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

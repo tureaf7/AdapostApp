@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -36,6 +37,7 @@ public class NotificationsActivity extends BaseActivity implements NotificationA
     private List<Notification> notifications;
     private FirebaseFirestore db;
     private FirebaseAuth auth;
+    private ListenerRegistration notificationsListener; // Adăugăm pentru a gestiona listenerul
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +57,15 @@ public class NotificationsActivity extends BaseActivity implements NotificationA
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-        setupBottomNavigation(R.id.navigation_notifications);
+
+        // Încărcăm notificările doar dacă utilizatorul este autentificat
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ProfileActivity.class));
+            finish();
+            return;
+        }
+
         loadNotifications();
     }
 
@@ -64,24 +74,31 @@ public class NotificationsActivity extends BaseActivity implements NotificationA
         return R.id.navigation_notifications;
     }
 
-    private void loadNotifications() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Verificăm dacă utilizatorul este autentificat
         if (auth.getCurrentUser() == null) {
             Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ProfileActivity.class));
             finish();
-            return;
         }
+        setupBottomNavigation(R.id.navigation_notifications);
+    }
 
+    private void loadNotifications() {
         String userId = auth.getCurrentUser().getUid();
         progressBar.setVisibility(View.VISIBLE);
         textViewEmpty.setVisibility(View.GONE);
 
-        db.collection("Notifications")
+        notificationsListener = db.collection("Notifications")
                 .whereEqualTo("userId", userId)
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error) -> {
                     progressBar.setVisibility(View.GONE);
                     if (error != null) {
                         Toast.makeText(this, "Eroare la încărcarea notificărilor!", Toast.LENGTH_SHORT).show();
+                        Log.e("NotificationsActivity", "Eroare la încărcarea notificărilor:", error);
                         return;
                     }
                     if (value != null) {
@@ -95,6 +112,17 @@ public class NotificationsActivity extends BaseActivity implements NotificationA
                         adapter.notifyDataSetChanged();
                     }
                 });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Oprim listenerul pentru a evita scurgeri de memorie sau cereri neautorizate
+        if (notificationsListener != null) {
+            notificationsListener.remove();
+            notificationsListener = null;
+            Log.d("NotificationsActivity", "Listenerul pentru notificări a fost oprit");
+        }
     }
 
     @Override
@@ -121,46 +149,35 @@ public class NotificationsActivity extends BaseActivity implements NotificationA
         switch (type) {
             case "APPROVAL":
             case "REJECTION":
-                if (applicationId == null) {
+                Intent intent = new Intent(this, AdoptionApplicationDetailsActivity.class);
+                if (applicationId != null) {
+                    intent.putExtra("adoptionApplication", applicationId);
+                } else {
                     Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
-                    return;
                 }
-                db.collection("AdoptionApplications")
-                        .document(applicationId)
-                        .get()
-                        .addOnSuccessListener(documentSnapshot -> {
-                            if (documentSnapshot.exists()) {
-                                String animalId = documentSnapshot.getString("animalId");
-                                if (animalId != null && !animalId.isEmpty()) {
-                                    Intent intent = new Intent(NotificationsActivity.this, AnimalProfileActivity.class);
-                                    intent.putExtra("animal", animalId);
-                                    startActivity(intent);
-                                } else {
-                                    Toast.makeText(this, "Animalul asociat nu a fost găsit!", Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(this, "Eroare la preluarea cererii!", Toast.LENGTH_SHORT).show());
+                startActivity(intent);
                 break;
 
             case "VOLUNTEER_APPROVAL":
             case "VOLUNTEER_REJECTION":
-                Intent intent = new Intent(this, ApplicationsListActivity.class);
+                Intent intent1 = new Intent(this, ApplicationsListActivity.class);
                 if (applicationId != null) {
-                    intent.putExtra("volunteerApplication", applicationId);
+                    intent1.putExtra("volunteerApplication", applicationId);
+                } else {
+                    Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
                 }
-                startActivity(intent);
+                startActivity(intent1);
                 break;
 
             case "NEW_APPLICATION":
             case "NEW_VOLUNTEER_REQUEST":
-                intent = new Intent(this, type.equals("NEW_APPLICATION") ? AdoptionApplicationDetailsActivity.class : ApplicationsListActivity.class);
+                Intent intent2 = new Intent(this, type.equals("NEW_APPLICATION") ? AdoptionApplicationDetailsActivity.class : ApplicationsListActivity.class);
                 if (applicationId != null) {
-                    intent.putExtra(type.equals("NEW_APPLICATION") ? "applicationId" : "volunteerApplication", applicationId);
+                    intent2.putExtra(type.equals("NEW_APPLICATION") ? "adoptionApplication" : "volunteerApplication", applicationId);
+                } else {
+                    Toast.makeText(this, "Cererea asociată nu a fost găsită!", Toast.LENGTH_SHORT).show();
                 }
-                startActivity(intent);
+                startActivity(intent2);
                 break;
 
             default:

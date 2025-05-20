@@ -1,6 +1,7 @@
 package com.example.adapostapp;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
@@ -38,17 +39,19 @@ public class ChatActivity extends AppCompatActivity {
     private MessageAdapter messageAdapter;
     private List<Message> messages;
     private FirebaseFirestore db;
+    private FirebaseAuth auth;
     private TextView nameTextView;
     private String chatId, otherUserId, currentUserId;
     private ListenerRegistration messagesListener; // Pentru markMessagesAsRead
     private ListenerRegistration loadMessagesListener; // Pentru loadMessages
-    private ListenerRegistration unreadMessagesListener; // Pentru unreadMessages
+    private static ChatActivity instance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        instance = this;
         recyclerViewMessages = findViewById(R.id.recyclerViewMessages);
         editTextMessage = findViewById(R.id.editTextMessage);
         ImageButton buttonSend = findViewById(R.id.buttonSend);
@@ -60,11 +63,19 @@ public class ChatActivity extends AppCompatActivity {
         imageViewProfile = findViewById(R.id.imageViewProfile);
         nameTextView = findViewById(R.id.textViewOtherUser);
 
+        auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        currentUserId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
         chatId = getIntent().getStringExtra("chatId");
         otherUserId = getIntent().getStringExtra("otherUserId");
         Log.d("ChatActivity", "Other user ID: " + otherUserId);
+
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ProfileActivity.class));
+            finish();
+            return;
+        }
 
         loadOtherUser(otherUserId);
         buttonBack.setOnClickListener(v -> finish());
@@ -110,6 +121,11 @@ public class ChatActivity extends AppCompatActivity {
 
     @SuppressLint("NotifyDataSetChanged")
     private void loadMessages() {
+        if (auth.getCurrentUser() == null) {
+            Log.d("ChatActivity", "Utilizatorul nu este autentificat, nu inițiem listener-ul.");
+            return;
+        }
+
         loadMessagesListener = db.collection("Chats").document(chatId)
                 .collection("Messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
@@ -131,6 +147,8 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void markMessagesAsRead() {
+        if (auth.getCurrentUser() == null) return;
+
         messagesListener = db.collection("Chats")
                 .document(chatId)
                 .collection("Messages")
@@ -162,10 +180,15 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ProfileActivity.class));
+            finish();
+            return;
+        }
         if (chatId != null) {
             loadMessages();
             markMessagesAsRead();
@@ -175,30 +198,23 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (messagesListener != null) {
-            messagesListener.remove();
-            messagesListener = null;
-        }
-        if (loadMessagesListener != null) {
-            loadMessagesListener.remove();
-            loadMessagesListener = null;
-        }
+        stopListeners();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (messagesListener != null) {
-            messagesListener.remove();
-            messagesListener = null;
-        }
-        if (loadMessagesListener != null) {
-            loadMessagesListener.remove();
-            loadMessagesListener = null;
-        }
+        stopListeners();
     }
 
     private void createChatAndSendMessage(String messageText) {
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ProfileActivity.class));
+            finish();
+            return;
+        }
+
         String newChatId = db.collection("Chats").document().getId();
         List<String> participants = Arrays.asList(currentUserId, otherUserId);
         Chat newChat = new Chat(newChatId, participants);
@@ -217,13 +233,19 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String messageText) {
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ProfileActivity.class));
+            finish();
+            return;
+        }
+
         Message message = new Message(currentUserId, otherUserId, messageText, false);
 
         db.collection("Chats").document(chatId)
                 .collection("Messages")
                 .add(message)
                 .addOnSuccessListener(documentReference -> {
-                    // Mesajul a fost trimis
                     Log.d("ChatActivity", "Mesaj trimis cu succes!");
                     updateChatSummary(chatId, otherUserId, message, true);
                 })
@@ -234,7 +256,14 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void updateChatSummary(String chatId, String otherUserId, Message message, boolean hasUnreadMessages) {
-        ChatSummary chatSummary = new ChatSummary(chatId, otherUserId, message.getMessage(), hasUnreadMessages);
+        if (auth.getCurrentUser() == null) {
+            Toast.makeText(this, "Trebuie să fii autentificat!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, ProfileActivity.class));
+            finish();
+            return;
+        }
+
+        ChatSummary chatSummary = new ChatSummary(chatId, currentUserId, message.getMessage(), hasUnreadMessages);
         db.collection("users")
                 .document(otherUserId)
                 .collection("chats")
@@ -242,6 +271,22 @@ public class ChatActivity extends AppCompatActivity {
                 .set(chatSummary, SetOptions.merge())
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Chat actualizat pentru user " + otherUserId))
                 .addOnFailureListener(e -> Log.w(TAG, "Eroare la actualizarea chat-ului pentru user " + otherUserId, e));
+    }
+
+    // Metodă pentru a opri listener-ii doar la logout
+    public void stopListeners() {
+        if (loadMessagesListener != null) {
+            loadMessagesListener.remove();
+            loadMessagesListener = null;
+        }
+        if (messagesListener != null) {
+            messagesListener.remove();
+            messagesListener = null;
+        }
+    }
+
+    public static ChatActivity getInstance() {
+        return instance;
     }
 
     static class ChatSummary {
@@ -260,7 +305,6 @@ public class ChatActivity extends AppCompatActivity {
             this.otherUserId = otherUserId;
             this.lastMessage = lastMessage;
             this.hasUnreadMessages = hasUnreadMessages;
-            // Nu setăm timestamp aici; Firestore îl va seta automat datorită @ServerTimestamp
         }
 
         public String getChatId() {

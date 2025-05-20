@@ -69,7 +69,6 @@ public class ProfileActivity extends BaseActivity {
         db = FirebaseFirestore.getInstance();
         user = auth.getCurrentUser();
 
-        setupBottomNavigation(R.id.navigation_profile);
         logoutLayout = findViewById(R.id.logoutLayout);
         adoptionsLayout = findViewById(R.id.AdoptionsLayout);
         favoritesLayout = findViewById(R.id.favoritesLayout);
@@ -88,22 +87,6 @@ public class ProfileActivity extends BaseActivity {
         volunteersLayout = findViewById(R.id.volunteerApplicationLinearLayout);
         adminLogOutLayout = findViewById(R.id.adminLogoutLayout);
         textViewRegister.setText(Html.fromHtml("Nu ai un cont? <font color='#06D6A0'><b>Înregistrează-te</b></font>"));
-
-        final View rootView = findViewById(android.R.id.content);
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            Rect r = new Rect();
-            rootView.getWindowVisibleDisplayFrame(r);
-            int screenHeight = rootView.getRootView().getHeight();
-            int keypadHeight = screenHeight - r.bottom;
-
-            if (bottomNavigationView != null) {
-                if (keypadHeight > screenHeight * 0.15) {
-                    bottomNavigationView.setVisibility(View.GONE);
-                } else {
-                    bottomNavigationView.setVisibility(View.VISIBLE);
-                }
-            }
-        });
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -152,6 +135,12 @@ public class ProfileActivity extends BaseActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        setupBottomNavigation(R.id.navigation_profile);
+    }
+
+    @Override
     protected int getSelectedItemId() {
         return R.id.navigation_profile;
     }
@@ -167,7 +156,6 @@ public class ProfileActivity extends BaseActivity {
     }
 
     private void showUserInfo(String role) {
-        user = FirebaseAuth.getInstance().getCurrentUser();
         UserUtils.getUserInfo(user, new UserUtils.UserInfoCallback() {
             @Override
             public void onUserInfoRetrieved(DocumentSnapshot documentSnapshot) {
@@ -244,6 +232,7 @@ public class ProfileActivity extends BaseActivity {
     }
 
     private void logOut() {
+        Log.d("ProfileActivity", "LogOut");
         SharedPreferences prefs = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.remove(Constants.KEY_USER_ROLE);
@@ -269,13 +258,22 @@ public class ProfileActivity extends BaseActivity {
     }
 
     private void proceedWithLogout() {
-        FirebaseAuth.getInstance().signOut();
-        googleSignInClient.signOut().addOnCompleteListener(this, task -> {
+        stopAllListeners();
+
+        // Termină clientul Firestore
+        FirebaseFirestore.getInstance().terminate().addOnCompleteListener(terminateTask -> {
             FirebaseFirestore.getInstance().clearPersistence().addOnCompleteListener(clearTask -> {
-                Intent intent = new Intent(ProfileActivity.this, ProfileActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
+                // Deconectează utilizatorul
+                FirebaseAuth.getInstance().signOut();
+                googleSignInClient.signOut().addOnCompleteListener(this, signOutTask -> {
+                    // Reinitializează Firestore pentru a evita erorile
+                    FirebaseFirestore.getInstance(); // Reia instanța implicită
+                    Intent intent = new Intent(ProfileActivity.this, ProfileActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    Log.d("ProfileActivity", "proceedWithLogout");
+                    finish();
+                });
             });
         });
     }
@@ -391,22 +389,14 @@ public class ProfileActivity extends BaseActivity {
     }
 
     private void isUserExist(FirebaseUser user) {
-        UserUtils.isUserExist(user, new UserUtils.UserExistCallback() {
-            @Override
-            public void onUserExist(boolean exists) {
-                if (exists) {
-                    Log.d("AnotherActivity", "Utilizatorul există!");
-                    updateUserInfo(getUserRole(), user); // Actualizăm rolul și meniul
-                } else {
-                    Log.e("AnotherActivity", "Utilizatorul nu există sau a fost sters!");
-                    Toast.makeText(ProfileActivity.this, "Utilizatorul nu există sau a fost sters!", Toast.LENGTH_SHORT).show();
-                    logOut();
-                }
-            }
-
-            @Override
-            public void onError(Exception e) {
-                Log.e("AnotherActivity", "Eroare la verificarea utilizatorului", e);
+        UserUtils.isUserExist(user.getUid(), exists -> {
+            if (exists) {
+                updateUserInfo(getUserRole(), user); // Actualizăm rolul și meniul
+                Log.d("ProfileActivity", "Utilizatorul există!");
+            } else {
+                logOut();
+                Toast.makeText(ProfileActivity.this, "Utilizatorul nu există sau a fost sters!", Toast.LENGTH_SHORT).show();
+                Log.d("ProfileActivity", "Utilizatorul nu există!");
             }
         });
     }

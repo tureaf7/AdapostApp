@@ -2,6 +2,10 @@ package com.example.adapostapp;
 
 import com.google.firebase.Timestamp;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Animal {
     private String Id;
     private String Name;
@@ -17,18 +21,21 @@ public class Animal {
     private String Color;
     private boolean isSterilized;
     private boolean isVaccinated;
+    private String animalSize;
+    private List<String> MorePhotos;
 
     public Animal() {
         // Constructor necesar pentru Firebase
     }
 
-    public Animal(String name, String gen, String speciesSelected, boolean sterilized, boolean vaccinated, String color, String description, String breed, int years, int months , Timestamp arrivalDate, boolean adopted, String imageUrl) {
+    public Animal(String name, String gen, String speciesSelected, boolean sterilized, boolean vaccinated, String color, String description, String breed, int years, int months , Timestamp arrivalDate, boolean adopted, String imageUrl, String animalSize) {
         this.Name = name;
         this.Gen = gen;
         this.Species = speciesSelected;
         this.isSterilized = sterilized;
         this.isVaccinated = vaccinated;
         this.Color = color;
+        this.animalSize = animalSize;
         this.Description = description;
         this.Breed = breed;
         this.Years = years;
@@ -36,6 +43,30 @@ public class Animal {
         this.ArrivalDate = arrivalDate;
         this.Adopted = adopted;
         this.Photo = imageUrl;
+    }
+
+    public Animal(String name, String gen, String speciesSelected, boolean sterilized, boolean vaccinated, String color, String description, String breed, int years, int months , Timestamp arrivalDate, boolean adopted, String imageUrl, List<String> morePhotos, String animalSize) {
+        this.Name = name;
+        this.Gen = gen;
+        this.Species = speciesSelected;
+        this.isSterilized = sterilized;
+        this.isVaccinated = vaccinated;
+        this.Color = color;
+        this.animalSize = animalSize;
+        this.Description = description;
+        this.Breed = breed;
+        this.Years = years;
+        this.Months = months;
+        this.ArrivalDate = arrivalDate;
+        this.Adopted = adopted;
+        this.Photo = imageUrl;
+        this.MorePhotos = new ArrayList<>();
+    }
+
+    public void addMorePhoto(String photoUrl) {
+        if (photoUrl != null && !MorePhotos.contains(photoUrl)) {
+            MorePhotos.add(photoUrl);
+        }
     }
 
     // Getteri și setteri
@@ -80,4 +111,10 @@ public class Animal {
 
     public boolean isVaccinated() { return isVaccinated; }
     public void setVaccinated(boolean vaccinated) { isVaccinated = vaccinated; }
+
+    public List<String> getMorePhotos() { return MorePhotos; }
+    public void setMorePhotos(List<String> morePhotos) { MorePhotos = morePhotos; }
+
+    public String getAnimalSize() { return animalSize; }
+    public void setAnimalSize(String size) { animalSize = size; }
 }

@@ -1,6 +1,5 @@
 package com.example.adapostapp;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,11 +14,15 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,6 +44,7 @@ public class ApplicationsListActivity extends BaseActivity {
     private List<VolunteerApplications> allVolunteerApplications = new ArrayList<>();
     private List<AdoptionApplication> allAdoptionApplications = new ArrayList<>();
     private ImageButton buttonBackToMain;
+    private String animalId;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,7 +54,7 @@ public class ApplicationsListActivity extends BaseActivity {
         db = FirebaseFirestore.getInstance();
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
-        setupBottomNavigation(R.id.navigation_applications);
+
 
         buttonBackToMain = findViewById(R.id.buttonBackToMain);
         progressBar = findViewById(R.id.progressBar);
@@ -64,6 +68,8 @@ public class ApplicationsListActivity extends BaseActivity {
         recyclerViewApplications.setAdapter(adapter);
 
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
+
+        animalId = getIntent().getStringExtra("animal");
 
         List<String> filterOptions = new ArrayList<>();
         filterOptions.add("Toate");
@@ -82,7 +88,8 @@ public class ApplicationsListActivity extends BaseActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
 
         int selectedTab = getIntent().getIntExtra("selectedTab", 0);
@@ -99,7 +106,8 @@ public class ApplicationsListActivity extends BaseActivity {
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
@@ -128,6 +136,7 @@ public class ApplicationsListActivity extends BaseActivity {
         } else {
             fetchVolunteerApplications();
         }
+        setupBottomNavigation(R.id.navigation_applications);
     }
 
     private void fetchVolunteerApplications() {
@@ -161,31 +170,32 @@ public class ApplicationsListActivity extends BaseActivity {
 
     private void fetchAdoptionApplications() {
         progressBar.setVisibility(View.VISIBLE);
-        db.collection("AdoptionApplications")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    allAdoptionApplications.clear();
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                            AdoptionApplication adoptionApplication = documentSnapshot.toObject(AdoptionApplication.class);
-                            if (adoptionApplication != null) {
-                                adoptionApplication.setId(documentSnapshot.getId());
-                                allAdoptionApplications.add(adoptionApplication);
-                            }
-                        }
-                        Collections.sort(allAdoptionApplications, (a1, a2) -> a2.getApplicationDate().compareTo(a1.getApplicationDate()));
-                        filterRequests(spinnerFilter.getSelectedItem().toString());
-                    } else {
-                        adapter.setApplications(new ArrayList<>());
-                        noneFavoriteTextView.setVisibility(View.VISIBLE);
-                    }
-                    progressBar.setVisibility(View.GONE);
-                }).addOnFailureListener(e -> {
-                    Log.e("Firebase", "Eroare la preluarea cererilor de adopție", e);
-                    adapter.setApplications(new ArrayList<>());
-                    noneFavoriteTextView.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
-                });
+
+        Task<QuerySnapshot> query = (animalId != null
+                ? db.collection("AdoptionApplications").whereEqualTo("animalId", animalId).get()
+                : db.collection("AdoptionApplications").get());
+
+        query.addOnSuccessListener(queryDocumentSnapshots -> {
+            allAdoptionApplications.clear();
+            if (!queryDocumentSnapshots.isEmpty()) {
+                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                    AdoptionApplication adoptionApplication = documentSnapshot.toObject(AdoptionApplication.class);
+                    adoptionApplication.setId(documentSnapshot.getId());
+                    allAdoptionApplications.add(adoptionApplication);
+                }
+                Collections.sort(allAdoptionApplications, (a1, a2) -> a2.getApplicationDate().compareTo(a1.getApplicationDate()));
+                filterRequests(spinnerFilter.getSelectedItem().toString());
+            } else {
+                adapter.setApplications(new ArrayList<>());
+                noneFavoriteTextView.setVisibility(View.VISIBLE);
+            }
+            progressBar.setVisibility(View.GONE);
+        }).addOnFailureListener(e -> {
+            Log.e("Firebase", "Eroare la preluarea cererilor de adopție", e);
+            adapter.setApplications(new ArrayList<>());
+            noneFavoriteTextView.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.GONE);
+        });
     }
 
     private void filterRequests(String status) {

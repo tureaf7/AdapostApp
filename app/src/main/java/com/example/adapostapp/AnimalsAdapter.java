@@ -25,22 +25,31 @@ public class AnimalsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private Context context;
     private boolean isAdmin;
     private OnAdminActionListener adminActionListener;
+    private List<String> favoriteAnimalIds;
 
     public interface OnAdminActionListener {
         void onEditClicked(String animalId);
         void onDeleteClicked(String animalId);
+        void onFavoriteClicked(String animalId);
     }
 
-    public AnimalsAdapter(Context context, boolean isAdmin, OnAdminActionListener listener) {
+    public AnimalsAdapter(Context context, boolean isAdmin, OnAdminActionListener listener, List<String> favoriteAnimalIds) {
         this.context = context;
         this.items = new ArrayList<>();
         this.isAdmin = isAdmin;
         this.adminActionListener = listener;
+        this.favoriteAnimalIds = new ArrayList<>(favoriteAnimalIds != null ? favoriteAnimalIds : new ArrayList<>());
     }
 
     public void setItems(List<Object> items) {
         this.items = items;
         notifyDataSetChanged();
+    }
+
+    public void updateFavorites(List<String> newFavoriteIds) {
+        this.favoriteAnimalIds.clear();
+        this.favoriteAnimalIds.addAll(newFavoriteIds);
+        notifyDataSetChanged(); // Reîmprospătăm UI-ul
     }
 
     @Override
@@ -62,7 +71,7 @@ public class AnimalsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_animal_item_edit, parent, false);
             return new AdminAnimalViewHolder(view);
         }
-        throw new IllegalArgumentException("Invalid view type"); // Înlocuiește cazul TYPE_ADD_BUTTON
+        throw new IllegalArgumentException("Invalid view type");
     }
 
     @Override
@@ -94,7 +103,11 @@ public class AnimalsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             Glide.with(context).load(animal.getPhoto()).into(holder.animalPhoto);
         }
 
-        holder.imageButtonFavorite.setVisibility(View.GONE); // Ascuns conform codului original
+        // Afișăm starea favorite
+        boolean isFavorite = favoriteAnimalIds.contains(animal.getId());
+        holder.imageButtonFavorite.setImageResource(isFavorite ? R.drawable.ic_favorite_red : R.drawable.ic_favorite);
+        holder.imageButtonFavorite.setVisibility(View.VISIBLE); // Asigurăm că butonul este vizibil
+        holder.imageButtonFavorite.setOnClickListener(v -> adminActionListener.onFavoriteClicked(animal.getId()));
 
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, AnimalProfileActivity.class);

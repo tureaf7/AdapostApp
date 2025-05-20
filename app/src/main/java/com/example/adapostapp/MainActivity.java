@@ -77,7 +77,6 @@ public class MainActivity extends BaseActivity {
         voluntarText = findViewById(R.id.voluntarText);
         noneAnimalTextView = findViewById(R.id.noneAnimalstextView);
 
-        setupBottomNavigation(R.id.navigation_home);
 
         // Inițializări Firebase
         db = FirebaseFirestore.getInstance();
@@ -109,11 +108,13 @@ public class MainActivity extends BaseActivity {
     protected int getSelectedItemId() {
         return R.id.navigation_home;
     }
+
     @Override
     protected void onResume() {
         super.onResume();
         horizontalLinearLayout.removeAllViews();
         fetchAnimals();
+        setupBottomNavigation(R.id.navigation_home);
     }
 
     @Override

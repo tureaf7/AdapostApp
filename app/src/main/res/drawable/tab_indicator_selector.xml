@@ -1,0 +1,5 @@
+<!-- res/drawable/tab_indicator_selector.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/tab_indicator_dot" android:state_selected="true"/>
+    <item android:drawable="@drawable/tab_indicator_dot_inactive"/>
+</selector>

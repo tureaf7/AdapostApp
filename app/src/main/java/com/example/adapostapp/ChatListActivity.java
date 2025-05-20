@@ -41,12 +41,14 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
     private FirebaseAuth auth;
     private FirebaseUser firebaseUser;
     private String currentUserId;
+    private static ChatListActivity instance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_list);
 
+        instance = this;
         recyclerViewChatList = findViewById(R.id.recyclerViewChatList);
         searchAutoComplete = findViewById(R.id.searchAutoComplete);
         progressBar = findViewById(R.id.progressBar);
@@ -59,7 +61,6 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
         auth = FirebaseAuth.getInstance();
         firebaseUser = auth.getCurrentUser();
 
-        setupBottomNavigation(R.id.navigation_messages);
 
         if (firebaseUser == null) {
             Toast.makeText(this, "Utilizatorul nu este autentificat!", Toast.LENGTH_SHORT).show();
@@ -79,14 +80,21 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
 
         userAdapter = new UserAdapter(this, usersList);
         searchAutoComplete.setAdapter(userAdapter);
-        searchAutoComplete.setThreshold(1);
+        searchAutoComplete.setThreshold(0); // Afișăm dropdown-ul chiar și fără text
         searchAutoComplete.setDropDownBackgroundResource(android.R.color.white);
-        searchAutoComplete.setDropDownHeight(400);
+
+        // Afișăm dropdown-ul la apăsare
+        searchAutoComplete.setOnTouchListener((v, event) -> {
+            searchAutoComplete.showDropDown(); // Forțează afișarea dropdown-ului
+            return false;
+        });
+
         searchAutoComplete.setOnItemClickListener((parent, view, position, id) -> {
             User selectedUser = userAdapter.getItem(position);
             if (selectedUser != null) {
                 Log.d("ChatListActivity", "Utilizator selectat: " + selectedUser.getName());
                 openChat(selectedUser);
+                searchAutoComplete.setText(""); // Resetăm textul după selecție
             }
         });
 
@@ -94,7 +102,7 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
 
         progressBar.setVisibility(View.VISIBLE);
         textViewEmpty.setVisibility(View.GONE);
-//        setupUI();
+        setupUI();
     }
 
     @Override
@@ -103,9 +111,31 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopListener();
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        stopListener();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-        setupUI();
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser != null) {
+            currentUserId = currentUser.getUid();
+            setupUI();
+        } else {
+            Toast.makeText(this, "Utilizatorul nu este autentificat!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, ProfileActivity.class);
+            startActivity(intent);
+            finish();
+        }
+        setupBottomNavigation(R.id.navigation_messages);
     }
 
     private void setupUI() {
@@ -123,11 +153,17 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         User user = doc.toObject(User.class);
                         user.setId(doc.getId());
-                        usersList.add(user);
+                        if (!user.getId().equals(currentUserId)) { // Excludem utilizatorul curent
+                            usersList.add(user);
+                        }
                         Log.d("ChatListActivity", "Utilizator: " + user.getName());
                     }
                     userAdapter.updateUsers(usersList);
                     Log.d("ChatListActivity", "Utilizatori încărcați: " + usersList.size());
+                    // Afișăm dropdown-ul după încărcarea utilizatorilor
+                    if (!usersList.isEmpty()) {
+                        searchAutoComplete.showDropDown();
+                    }
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
@@ -137,6 +173,14 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
     }
 
     private void loadChats() {
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null) {
+            Log.d("ChatListActivity", "Utilizatorul nu este autentificat, nu inițiem listener-ul.");
+            return; // Nu inițializăm listener-ul dacă utilizatorul nu este autentificat
+        }
+
+        currentUserId = user.getUid();
+        Log.d("ChatListActivity---------", "Current user ID: " + user.getUid());
         chatsListener = db.collection("Chats")
                 .whereArrayContains("participants", currentUserId)
                 .addSnapshotListener((queryDocumentSnapshots, e) -> {
@@ -147,6 +191,7 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
                         return;
                     }
 
+                    Log.d("ChatListActivity", "Preluare conversații (listener pornit)");
                     chats.clear();
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         Chat chat = doc.toObject(Chat.class);
@@ -158,13 +203,15 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
                 });
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Oprește listener-ul pentru a evita scurgeri de memorie
+    // Metodă pentru a opri listener-ul la logout
+    public void stopListener() {
         if (chatsListener != null) {
             chatsListener.remove();
             chatsListener = null;
+            Log.d("ChatListActivity", "Listener ChatListActivity oprit");
+        }
+        if (adapter != null) {
+            adapter.stopListening(); // Oprește listenerii din adapter
         }
     }
 
@@ -178,7 +225,6 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
             textViewEmpty.setVisibility(View.VISIBLE);
         }
     }
-
 
     private void openChat(User user) {
         db.collection("Chats")
@@ -234,5 +280,7 @@ public class ChatListActivity extends BaseActivity implements ChatListAdapter.On
                 });
     }
 
-
+    public static ChatListActivity getInstance() {
+        return instance;
+    }
 }

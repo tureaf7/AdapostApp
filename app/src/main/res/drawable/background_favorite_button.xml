@@ -4,7 +4,7 @@
     <!-- Fundal buton normal -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#77FFFFFF"/> <!-- Fundal inițial -->
+            <solid android:color="#ABE0E0E0"/> <!-- Fundal inițial -->
             <corners android:radius="30dp"/> <!-- Colțuri rotunjite -->
         </shape>
     </item>

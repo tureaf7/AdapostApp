@@ -48,7 +48,6 @@ public class FavoritesActivity extends BaseActivity {
         progressBar = findViewById(R.id.progressBar);
         noneFavoriteTextView = findViewById(R.id.textViewEmpty);
         scrollView = findViewById(R.id.ScrollView);
-setupBottomNavigation(R.id.navigation_favorites);
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
 
         db = FirebaseFirestore.getInstance();
@@ -70,6 +69,7 @@ setupBottomNavigation(R.id.navigation_favorites);
         super.onResume();
         gridLayout.removeAllViews();
         fetchAnimals();
+        setupBottomNavigation(R.id.navigation_favorites);
     }
 
 
@@ -177,7 +177,7 @@ setupBottomNavigation(R.id.navigation_favorites);
         GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams();
         layoutParams.rowSpec = GridLayout.spec(GridLayout.UNDEFINED); // Lasă rândul să fie dinamic
         layoutParams.columnSpec = GridLayout.spec(GridLayout.UNDEFINED); // Lasă coloana să fie dinamică
-        layoutParams.setMargins(0, 0, 32, 32);  // Adaugă margini între carduri
+        layoutParams.setMargins(0, 0, 64, 32);  // Adaugă margini între carduri
         itemView.setLayoutParams(layoutParams);
 
         itemView.setOnClickListener(v -> {

@@ -75,11 +75,18 @@ public class VolunteerApplicationDetailsActivity extends BaseActivity {
         approveButton = findViewById(R.id.buttonApproveVolunteer);
         rejectButton = findViewById(R.id.buttonRejectVolunteer);
         getVolunteerApplicationDetails();
+        if (!isAdmin()){
+            callButton.setVisibility(View.GONE);
+            emailButton.setVisibility(View.GONE);
+            messageButton.setVisibility(View.GONE);
+        }
     }
+
     @Override
     protected int getSelectedItemId() {
         return R.id.navigation_applications;
     }
+
     private void getVolunteerApplicationDetails() {
         db.collection("VolunteerRequests")
                 .document(applicationId)
@@ -128,7 +135,6 @@ public class VolunteerApplicationDetailsActivity extends BaseActivity {
         Map<String, String> availability = volunteerApplications.getAvailability();
         displayAvailability(availability);
 
-
         if (volunteerApplications.getExperience()) {
             experienceDetailsText.setText(volunteerApplications.getExperienceDetails());
             experienceDetailsText.setVisibility(View.VISIBLE);
@@ -163,7 +169,7 @@ public class VolunteerApplicationDetailsActivity extends BaseActivity {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         User user = documentSnapshot.toObject(User.class);
-                        adminName.setText(user.getName());
+                        adminName.setText(" de către " + user.getName());
                     }
                 })
                 .addOnFailureListener(e -> {

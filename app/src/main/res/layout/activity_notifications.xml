@@ -29,7 +29,7 @@
             android:layout_height="match_parent"
             android:layout_marginStart="8dp"
             android:gravity="center"
-            android:text="@string/terms_title"
+            android:text="@string/notifications_activity"
             android:textSize="20sp"
             android:textStyle="bold" />
     </LinearLayout>

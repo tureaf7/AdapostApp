@@ -29,9 +29,11 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.Objects;
 
 public class AdoptionApplicationDetailsActivity extends BaseActivity {
     private FirebaseAuth auth;
@@ -44,7 +46,7 @@ public class AdoptionApplicationDetailsActivity extends BaseActivity {
     private ImageView userPhoto, animalPhoto;
     private ImageButton callButton, emailButton, messageButton, backButton;
     private Button approveButton, rejectButton;
-    private String applicationId;
+    private String applicationId, userId;
     private LinearLayout linearLayoutButtons, linearLayoutStatusInfo;
 
     @Override
@@ -207,9 +209,13 @@ public class AdoptionApplicationDetailsActivity extends BaseActivity {
 
         callButton.setOnClickListener(v -> callUser());
         emailButton.setOnClickListener(v -> sendEmail());
-        messageButton.setOnClickListener(v -> sendMessage());
+        messageButton.setOnClickListener(v -> sendMessage(adoptionApplication.getUserId(), firebaseUser.getUid()));
 
-
+        animalPhoto.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AnimalProfileActivity.class);
+            intent.putExtra("animal", adoptionApplication.getAnimalId());
+            startActivity(intent);
+        });
     }
 
     private void getAdminName(AdoptionApplication adoptionApplication) {
@@ -227,42 +233,68 @@ public class AdoptionApplicationDetailsActivity extends BaseActivity {
                     Toast.makeText(this, "Eroare la preluarea detaliilor utilizatorului!", Toast.LENGTH_SHORT).show();
                 });
     }
-    private void sendMessage() {
-        // Preia userId din AdoptionApplication
-        db.collection("AdoptionApplications")
-                .document(applicationId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        AdoptionApplication adoptionApplication = documentSnapshot.toObject(AdoptionApplication.class);
-                        String userId = adoptionApplication.getUserId();
-                        String adminId = firebaseUser.getUid();
 
-                        db.collection("users")
-                                .document(adminId)
-                                .collection("chats")
-                                .whereEqualTo("otherUserId", userId)
-                                .get()
-                                .addOnSuccessListener(queryDocumentSnapshots -> {
-                                    if (!queryDocumentSnapshots.isEmpty()) {
-                                        // Conversație existentă
-                                        Chat chat = queryDocumentSnapshots.getDocuments().get(0).toObject(Chat.class);
-                                        if (chat != null) {
-                                            openChat(chat.getChatId(), userId);
-                                        }
-                                    } else {
-                                        // Conversație nouă
-                                        openChat(null, userId);
-                                    }
-                                }).addOnFailureListener(e -> {
-                                    Toast.makeText(this, "Eroare la preluarea conversațiilor!", Toast.LENGTH_SHORT).show();
-                                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: Chats", e);
-                                });
+//    private void sendMessage() {
+//        // Preia userId din AdoptionApplication
+//        db.collection("AdoptionApplications")
+//                .document(applicationId)
+//                .get()
+//                .addOnSuccessListener(documentSnapshot -> {
+//                    if (documentSnapshot.exists()) {
+//                        AdoptionApplication adoptionApplication = documentSnapshot.toObject(AdoptionApplication.class);
+//                        String userId = adoptionApplication.getUserId();
+//                        String adminId = firebaseUser.getUid();
+//
+//                        db.collection("users")
+//                                .document(adminId)
+//                                .collection("chats")
+//                                .whereEqualTo("otherUserId", userId)
+//                                .get()
+//                                .addOnSuccessListener(queryDocumentSnapshots -> {
+//                                    if (!queryDocumentSnapshots.isEmpty()) {
+//                                        // Conversație existentă
+//                                        Chat chat = queryDocumentSnapshots.getDocuments().get(0).toObject(Chat.class);
+//                                        if (chat != null) {
+//                                            openChat(chat.getChatId(), userId);
+//                                        }
+//                                    } else {
+//                                        // Conversație nouă
+//                                        openChat(null, userId);
+//                                    }
+//                                }).addOnFailureListener(e -> {
+//                                    Toast.makeText(this, "Eroare la preluarea conversațiilor!", Toast.LENGTH_SHORT).show();
+//                                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: Chats", e);
+//                                });
+//                    }
+//                })
+//                .addOnFailureListener(e -> {
+//                    Toast.makeText(this, "Eroare la preluarea detaliilor cererii!", Toast.LENGTH_SHORT).show();
+//                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: AdoptionApplications", e);
+//                });
+//    }
+
+    private void sendMessage(String userId, String adminId) {
+        db.collection("Chats")
+                .whereArrayContains("participants", userId) // Verifică dacă userId1 este în listă
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        List<String> participants = (List<String>) document.get("participants");
+                        Log.d("AdoptionApplicationDetailsActivity", "participants: " + participants);
+                        if (participants != null && participants.contains(adminId)) {
+                            // Am găsit o conversație care conține ambii utilizatori
+                            String chatId = document.getString("chatId");
+                            openChat(chatId, adminId);
+                            return;
+                        }
                     }
+                    // Dacă nu există conversație, creează una nouă
+                    openChat(null, adminId);
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Eroare la preluarea detaliilor cererii!", Toast.LENGTH_SHORT).show();
-                    Log.e("AdoptionApplicationDetailsActivity", "Error getting documents: AdoptionApplications", e);
+                    Toast.makeText(this, "Eroare la preluarea conversațiilor!", Toast.LENGTH_SHORT).show();
+                    Log.e("AdoptionApplicationDetailsActivity", "Error finding chat: " + e.getMessage(), e);
+                    openChat(null, adminId); // Fallback
                 });
     }
 
@@ -347,13 +379,12 @@ public class AdoptionApplicationDetailsActivity extends BaseActivity {
 
                     // Comite primul batch (aprobare + animal + favorite)
                     batch.commit()
-                            .addOnSuccessListener(aVoid -> {// Trimite notificare utilizatorului
-//                                String applicationAproved = "Cererea ta de adopție a fost aprobată!";
-//                                sendNotificationToUser(adoptionApplication.getUserId(), applicationAproved);
+                            .addOnSuccessListener(aVoid -> {
                                 // Pasul 2: După ce aprobarea e confirmată, respinge celelalte cereri
                                 rejectOtherApplications(adoptionApplication.getAnimalId());
                             })
                             .addOnFailureListener(e -> {
+                                Log.e("AdoptionApplicationDetailsActivity", "Eroare la aprobarea cererii!", e);
                                 Toast.makeText(this, "Eroare la aprobarea cererii!", Toast.LENGTH_SHORT).show();
                             });
                 })
@@ -361,20 +392,6 @@ public class AdoptionApplicationDetailsActivity extends BaseActivity {
                     Toast.makeText(this, "Eroare la eliminarea din favorite!", Toast.LENGTH_SHORT).show();
                 });
     }
-
-    private void sendNotificationToUser(String userId, String message) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map<String, Object> notification = new HashMap<>();
-        notification.put("userId", userId);
-        notification.put("message", message);
-        notification.put("timestamp", new Timestamp(new Date()));
-
-        db.collection("Notifications")
-                .add(notification)
-                .addOnSuccessListener(documentReference -> Log.d("Firebase", "Notificare salvată"))
-                .addOnFailureListener(e -> Log.w("Firebase", "Eroare la salvarea notificării", e));
-    }
-
 
     private void rejectOtherApplications(String animalId) {
         WriteBatch rejectBatch = db.batch();

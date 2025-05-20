@@ -193,7 +193,8 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
-                    android:text="Varsta" />
+                    android:text="Varsta"
+                    android:textSize="18sp" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -256,6 +257,30 @@
                 android:hint="Descriere"
                 android:importantForAutofill="no"
                 android:inputType="textMultiLine" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/animalSizeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Talie"
+                    android:textSize="18sp"
+                    tools:ignore="TextSizeCheck" />
+
+                <Spinner
+                    android:id="@+id/spinner"
+                    style="@style/CustomSpinnerStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

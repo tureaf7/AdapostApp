@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -35,11 +37,14 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
     private RecyclerView recyclerViewAnimals;
     private TextView noneFavoriteTextView;
     private ProgressBar progressBar;
+    private SearchView searchViewAnimals;
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private FirebaseUser user;
     private AnimalsAdapter adapter;
-    private FloatingActionButton fabAddAnimal;
+    private List<String> favoriteAnimalIds = new ArrayList<>();
+    private List<Animal> allAnimals = new ArrayList<>();
+    private boolean hasStartedTyping = false; // Variabilă pentru a urmări dacă utilizatorul a început să tasteze
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,27 +55,56 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
         recyclerViewAnimals = findViewById(R.id.recyclerViewAnimals);
         noneFavoriteTextView = findViewById(R.id.textViewEmpty);
         progressBar = findViewById(R.id.progressBar);
-        fabAddAnimal = findViewById(R.id.fab_add_animal);
+        searchViewAnimals = findViewById(R.id.searchViewAnimals);
+        FloatingActionButton fabAddAnimal = findViewById(R.id.fab_add_animal);
 
         buttonBackToMain.setOnClickListener(v -> onBackPressed());
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
+        if (user != null && !isAdmin()) {
+            readFavoritesFromDB();
+        }
 
-        adapter = new AnimalsAdapter(this, isAdmin(), this);
+        adapter = new AnimalsAdapter(this, isAdmin(), this, favoriteAnimalIds);
         recyclerViewAnimals.setAdapter(adapter);
         if (isAdmin()) {
             fabAddAnimal.setVisibility(View.VISIBLE);
             fabAddAnimal.setOnClickListener(v -> startActivity(new Intent(this, AddAnimalActivity.class)));
-            recyclerViewAnimals.setLayoutManager(new LinearLayoutManager(this)); // Listă verticală pentru admin
+            recyclerViewAnimals.setLayoutManager(new LinearLayoutManager(this));
         } else {
             GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
             recyclerViewAnimals.setLayoutManager(gridLayoutManager);
-            recyclerViewAnimals.setPadding(0, 0, 0, 0); // Padding pentru margini simetrice
+            recyclerViewAnimals.setPadding(0, 0, 0, 0);
         }
 
-        setupBottomNavigation(R.id.navigation_animals);
+        AutoCompleteTextView searchAutoComplete = searchViewAnimals.findViewById(androidx.appcompat.R.id.search_src_text);
+        if (searchAutoComplete != null) {
+            searchAutoComplete.setTextColor(getResources().getColor(android.R.color.black)); // Setează textul la negru
+        }
+
+        // Setăm listener-ul pentru SearchView
+        searchViewAnimals.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText != null && !newText.isEmpty()) {
+                    hasStartedTyping = true; // Utilizatorul a început să tasteze
+                    filterAnimals(newText);
+                } else if (hasStartedTyping) {
+                    // Dacă utilizatorul a șters tot textul, reaplicăm filtrul pentru a afișa lista inițială
+                    filterAnimals(newText);
+                }
+                return true;
+            }
+        });
+
+//        setupBottomNavigation(R.id.navigation_animals);
         readAnimalsFromDB(getUserRole());
     }
 
@@ -84,6 +118,7 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
         db.collection("Animals")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    allAnimals.clear();
                     List<Object> items = new ArrayList<>();
                     if (queryDocumentSnapshots.isEmpty()) {
                         Log.d("Firebase", "Nu au fost găsite animale.");
@@ -92,6 +127,7 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             Animal animal = document.toObject(Animal.class);
                             animal.setId(document.getId());
+                            allAnimals.add(animal);
                             if ("admin".equals(role)) {
                                 items.add(animal);
                             } else {
@@ -114,6 +150,49 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
                 });
     }
 
+    private void filterAnimals(String query) {
+        List<Object> filteredList = new ArrayList<>();
+        if (query == null || query.isEmpty()) {
+            // Afișăm lista inițială doar dacă utilizatorul a început să tasteze și apoi a șters textul
+            for (Animal animal : allAnimals) {
+                if ("admin".equals(getUserRole()) || !animal.isAdopted()) {
+                    filteredList.add(animal);
+                }
+            }
+        } else {
+            // Filtrăm după nume
+            String filterPattern = query.toLowerCase().trim();
+            for (Animal animal : allAnimals) {
+                if (animal.getName() != null && animal.getName().toLowerCase().contains(filterPattern)) {
+                    if ("admin".equals(getUserRole()) || !animal.isAdopted()) {
+                        filteredList.add(animal);
+                    }
+                }
+            }
+        }
+        adapter.setItems(filteredList);
+        noneFavoriteTextView.setVisibility(filteredList.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    private void readFavoritesFromDB() {
+        if (user == null) return;
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    favoriteAnimalIds.clear();
+                    if (documentSnapshot.exists() && documentSnapshot.contains("favorites")) {
+                        List<DocumentReference> favorites = (List<DocumentReference>) documentSnapshot.get("favorites");
+                        if (favorites != null) {
+                            for (DocumentReference ref : favorites) {
+                                favoriteAnimalIds.add(ref.getId());
+                            }
+                        }
+                    }
+                    Log.d("ListAnimalActivity", "Favorite IDs: " + favoriteAnimalIds.toString());
+                    adapter.updateFavorites(favoriteAnimalIds);
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Eroare la preluarea listei de favorite: ", e));
+    }
+
     @Override
     public void onEditClicked(String animalId) {
         Intent intent = new Intent(this, EditAnimalActivity.class);
@@ -124,6 +203,48 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
     @Override
     public void onDeleteClicked(String animalId) {
         showDeleteConfirmationDialog(animalId);
+    }
+
+    @Override
+    public void onFavoriteClicked(String animalId) {
+        toggleFavorite(animalId);
+    }
+
+    private void toggleFavorite(String animalId) {
+        if (user == null) {
+            Toast.makeText(this, "Trebuie să fii autentificat pentru a adăuga la favorite!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (favoriteAnimalIds.contains(animalId)) {
+            removeFromFavorites(animalId);
+        } else {
+            addToFavorites(animalId);
+        }
+    }
+
+    private void addToFavorites(String animalId) {
+        db.collection("users").document(user.getUid())
+                .update("favorites", FieldValue.arrayUnion(db.collection("Animals").document(animalId)))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "Animal adăugat în favorite!");
+                    Toast.makeText(ListAnimalActivity.this, "Animal adăugat în favorite!", Toast.LENGTH_SHORT).show();
+                    favoriteAnimalIds.add(animalId);
+                    adapter.updateFavorites(favoriteAnimalIds);
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Eroare la actualizarea favorite: ", e));
+    }
+
+    private void removeFromFavorites(String animalId) {
+        db.collection("users").document(user.getUid())
+                .update("favorites", FieldValue.arrayRemove(db.collection("Animals").document(animalId)))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "Animal șters din favorite!");
+                    Toast.makeText(ListAnimalActivity.this, "Animal șters din favorite!", Toast.LENGTH_SHORT).show();
+                    favoriteAnimalIds.remove(animalId);
+                    adapter.updateFavorites(favoriteAnimalIds);
+                })
+                .addOnFailureListener(e -> Log.e("Firestore", "Eroare la actualizarea favorite: ", e));
     }
 
     private void showDeleteConfirmationDialog(String animalId) {
@@ -203,7 +324,7 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
                     }
                     batch.commit()
                             .addOnSuccessListener(aVoid -> {
-                                readAnimalsFromDB("admin"); // Actualizăm UI-ul doar dacă rolul este "admin"
+                                readAnimalsFromDB("admin");
                                 Log.d("Firebase", "Animalul și cererile de adopție au fost șterse din Firestore.");
                             })
                             .addOnFailureListener(e -> Log.w("Firebase", "Eroare la ștergerea datelor.", e));
@@ -214,6 +335,11 @@ public class ListAnimalActivity extends BaseActivity implements AnimalsAdapter.O
     @Override
     protected void onResume() {
         super.onResume();
-        readAnimalsFromDB(getUserRole()); // Reîmprospătăm lista la revenire
+        if (user != null && !isAdmin()) {
+            readFavoritesFromDB();
+        }
+        readAnimalsFromDB(getUserRole());
+        setupBottomNavigation(R.id.navigation_animals);
+        Log.d("ListAnimalActivity", "onResume called");
     }
 }

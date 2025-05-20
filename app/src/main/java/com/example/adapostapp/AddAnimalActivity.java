@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -15,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
+import android.widget.Spinner;
 import androidx.appcompat.widget.SwitchCompat;
 
 import android.widget.TextView;
@@ -32,8 +35,10 @@ import com.google.firebase.storage.StorageReference;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -53,6 +58,8 @@ public class AddAnimalActivity extends AppCompatActivity {
     private StorageReference storageReference;
     private NumberPicker numberPickerYears, numberPickerMonths;
     private int years, months;
+    private Spinner spinnerFilter;
+    private String animalSize;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -79,6 +86,26 @@ public class AddAnimalActivity extends AppCompatActivity {
         submitButton = findViewById(R.id.submitButton);
         numberPickerYears = findViewById(R.id.numberPickerYears);
         numberPickerMonths = findViewById(R.id.numberPickerMonths);
+        spinnerFilter = findViewById(R.id.spinner);
+
+        List<String> filterOptions = new ArrayList<>();
+        filterOptions.add("Mică");
+        filterOptions.add("Medie");
+        filterOptions.add("Mare");
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, filterOptions);
+        spinnerFilter.setAdapter(spinnerAdapter);
+
+        spinnerFilter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                animalSize = parent.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
 
         numberPickerYears.setMinValue(0);
         numberPickerYears.setMaxValue(30);
@@ -231,7 +258,6 @@ public class AddAnimalActivity extends AppCompatActivity {
         String color = colorEditText.getText().toString();
         String description = descriptionEditText.getText().toString();
         String breed = breedEditText.getText().toString();
-//        int age = Integer.parseInt(ageEditText.getText().toString());
 
         Timestamp arrivalDate = parseDate(dateTextView.getText().toString());
 
@@ -241,7 +267,7 @@ public class AddAnimalActivity extends AppCompatActivity {
         }
 
         // Creează un obiect Animal fără ID
-        Animal animal = new Animal(name, gen, speciesSelected, isSterilized, isVaccinated, color, description, breed, years, months, arrivalDate, false, imageUrl);
+        Animal animal = new Animal(name, gen, speciesSelected, isSterilized, isVaccinated, color, description, breed, years, months, arrivalDate, false, imageUrl, animalSize);
 
         // Adaugă animalul în Firestore
         db.collection("Animals").add(animal)

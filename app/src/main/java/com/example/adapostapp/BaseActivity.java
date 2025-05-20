@@ -3,10 +3,12 @@ package com.example.adapostapp;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Rect;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -37,6 +39,22 @@ public abstract class BaseActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
         userRole = prefs.getString(Constants.KEY_USER_ROLE, Constants.ROLE_USER); // Valoare implicită "user"
         Log.d("BaseActivity", "Rol inițial din SharedPreferences: " + userRole);
+
+        final View rootView = findViewById(android.R.id.content);
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            Rect r = new Rect();
+            rootView.getWindowVisibleDisplayFrame(r);
+            int screenHeight = rootView.getRootView().getHeight();
+            int keypadHeight = screenHeight - r.bottom;
+
+            if (bottomNavigationView != null) {
+                if (keypadHeight > screenHeight * 0.15) {
+                    bottomNavigationView.setVisibility(View.GONE);
+                } else {
+                    bottomNavigationView.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
 
     protected abstract int getSelectedItemId();
@@ -89,29 +107,49 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     private void updateMessagesBadge() {
         Log.d("Badge", "Updating messages badge");
-        if (auth.getCurrentUser() == null) return;
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+            unreadMessagesListener = db.collection("users")
+                    .document(userId)
+                    .collection("chats")
+                    .whereEqualTo("hasUnreadMessages", true)
+                    .addSnapshotListener((value, error) -> {
+                        Log.d("Badge", "Value: " + value + ", Error: " + error);
+                        if (error != null) {
+                            Log.e("Badge", "Eroare la actualizarea badge-ului", error);
+                            return;
+                        }
+                        if (bottomNavigationView != null && value != null) {
+                            if (!value.isEmpty()) {
+                                BadgeDrawable badge = bottomNavigationView.getOrCreateBadge(R.id.navigation_messages);
+                                badge.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
+                                badge.setBadgeGravity(BadgeDrawable.TOP_END);
+                                badge.setVisible(true);
+                                badge.setNumber(value.size());
+                                badge.setBadgeTextColor(getResources().getColor(android.R.color.white));
+                            } else {
+                                bottomNavigationView.removeBadge(R.id.navigation_messages);
+                            }
+                        }
+                    });
+        }
+    }
 
-        String userId = auth.getCurrentUser().getUid();
-        unreadMessagesListener = db.collection("users")
-                .document(userId)
-                .collection("chats")
-                .whereEqualTo("hasUnreadMessages", true)
-                .addSnapshotListener((value, error) -> {
-                    Log.d("Badge", "Value: " + value + ", Error: " + error);
-                    if (error != null) {
-                        return;
-                    }
-                    if (value != null && !value.isEmpty()) {
-                        BadgeDrawable badge = bottomNavigationView.getOrCreateBadge(R.id.navigation_messages);
-                        badge.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
-                        badge.setBadgeGravity(BadgeDrawable.TOP_END);
-                        badge.setVisible(true);
-                        badge.setNumber(value.size());
-                        badge.setBadgeTextColor(getResources().getColor(android.R.color.white));
-                    } else {
-                        bottomNavigationView.removeBadge(R.id.navigation_messages);
-                    }
-                });
+    public void stopAllListeners() {
+        if (unreadMessagesListener != null) {
+            unreadMessagesListener.remove();
+            unreadMessagesListener = null;
+            Log.d("BaseActivity", "Listener unreadMessages oprit la logout");
+        }
+        if (ChatListActivity.getInstance() != null) {
+            ChatListActivity.getInstance().stopListener();
+            Log.d("BaseActivity", "Listener ChatListActivity oprit");
+        }
+        if (ChatActivity.getInstance() != null) {
+            ChatActivity.getInstance().stopListeners();
+            Log.d("BaseActivity", "Listener ChatActivity oprit");
+        }
     }
 
     protected void checkUserRole(FirebaseUser user) {
@@ -134,30 +172,29 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (unreadMessagesListener == null) {
-            updateMessagesBadge();
-        }
-    }
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        FirebaseUser user = auth.getCurrentUser();
+//        if (user != null) {
+//            if (unreadMessagesListener == null) {
+//                updateMessagesBadge();
+//            }
+//            checkUserRole(user);
+//            saveFcmToken(user.getUid());
+//        }
+//    }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (unreadMessagesListener != null) {
-            unreadMessagesListener.remove();
-            unreadMessagesListener = null;
-        }
+        // Nu eliminăm listener-ul aici, doar la logout
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (unreadMessagesListener != null) {
-            unreadMessagesListener.remove();
-            unreadMessagesListener = null;
-        }
+        // Nu eliminăm listener-ul aici, doar la logout
     }
 
     protected void saveFcmToken(String currentUserId) {
